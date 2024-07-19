@@ -155,9 +155,15 @@
             if (transactionType === 'deposit') {
                 depositTables.classList.add('active');
                 withdrawTables.classList.remove('active');
+                document.querySelector('.transaction-btn').classList.add('deposit-btn');
+                document.querySelector('.transaction-btn').classList.remove('withdraw-btn');
+                document.querySelector('.transaction-btn').value = 'เพิ่มรายการ';
             } else {
                 withdrawTables.classList.add('active');
                 depositTables.classList.remove('active');
+                document.querySelector('.transaction-btn').classList.add('withdraw-btn');
+                document.querySelector('.transaction-btn').classList.remove('deposit-btn');
+                document.querySelector('.transaction-btn').value = 'ถอน';
             }
         });
 
@@ -194,13 +200,13 @@
             const date = new Date().toLocaleDateString('th-TH', {
                 timeZone: 'Asia/Bangkok'
             });
+            if (!description || isNaN(amount) || amount <= 0) return;
+
             const total = getTotalAmount();
             const categories = getCategories();
             const existingCategory = categories.find(cat => cat.description === description);
 
-            if (!description || isNaN(amount) || amount <= 0) return;
-
-            if (amount > total || (existingCategory && existingCategory.amount <= 0)) {
+            if (amount > total || (existingCategory && existingCategory.amount < amount)) {
                 document.getElementById('errorMessage').textContent = 'ยอดเงินไม่เพียงพอสำหรับการถอน';
                 return;
             } else {
@@ -249,10 +255,7 @@
 
             if (existingCategory) {
                 existingCategory.amount += amount;
-                if (existingCategory.amount < 0) {
-                    existingCategory.amount = 0;
-                }
-                if (existingCategory.amount === 0) {
+                if (existingCategory.amount <= 0) {
                     categories.splice(categories.indexOf(existingCategory), 1);
                 }
             } else if (amount > 0) {
