@@ -155,7 +155,10 @@
 
             if (existingCategory) {
                 existingCategory.amount += amount;
-            } else {
+                if (existingCategory.amount < 0) {
+                    existingCategory.amount = 0;
+                }
+            } else if (amount > 0) {
                 categories.push({ description, amount });
             }
 
