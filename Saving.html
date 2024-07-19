@@ -32,7 +32,14 @@
             padding: 10px;
             text-align: center;
         }
-        input[type="text"], input[type="number"] {
+        .scrollable-table {
+            max-height: 200px; /* Adjust the height as needed */
+            overflow-y: auto;
+            display: block;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        input[type="text"], input[type="number"], select {
             width: calc(100% - 22px);
             padding: 10px;
             margin-bottom: 10px;
@@ -40,13 +47,12 @@
             border-radius: 5px;
         }
         input[type="submit"], .transaction-btn {
-            width: 48%;
+            width: 100%;
             padding: 10px;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            margin-right: 4%;
         }
         input[type="submit"]:hover, .transaction-btn:hover {
             opacity: 0.8;
@@ -56,13 +62,6 @@
         }
         .deposit-btn {
             background-color: #28a745;
-        }
-        select {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
         }
         .money-img {
             display: block;
@@ -99,33 +98,38 @@
         <div id="errorMessage" class="error-message"></div>
         <div id="depositTables" class="transaction-tables active">
             <h2>ตารางการฝาก</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>วันที่</th>
-                        <th>คำอธิบาย</th>
-                        <th>จำนวนเงิน</th>
-                    </tr>
-                </thead>
-                <tbody id="depositList">
-                    <!-- List will be populated here -->
-                </tbody>
-            </table>
+            <div class="scrollable-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>วันที่</th>
+                            <th>คำอธิบาย</th>
+                            <th>จำนวนเงิน</th>
+                            <th>รายการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="depositList">
+                        <!-- List will be populated here -->
+                    </tbody>
+                </table>
+            </div>
         </div>
         <div id="withdrawTables" class="transaction-tables">
             <h2>ตารางการถอน</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>วันที่</th>
-                        <th>คำอธิบาย</th>
-                        <th>จำนวนเงิน</th>
-                    </tr>
-                </thead>
-                <tbody id="withdrawList">
-                    <!-- List will be populated here -->
-                </tbody>
-            </table>
+            <div class="scrollable-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>วันที่</th>
+                            <th>คำอธิบาย</th>
+                            <th>จำนวนเงิน</th>
+                        </tr>
+                    </thead>
+                    <tbody id="withdrawList">
+                        <!-- List will be populated here -->
+                    </tbody>
+                </table>
+            </div>
         </div>
         <h2>ยอดรวม: <span id="totalAmount">0</span> บาท</h2>
         <h2>ตารางหมวดหมู่</h2>
@@ -176,7 +180,7 @@
             if (!description || isNaN(amount) || amount <= 0) return;
 
             const deposits = getDeposits();
-            deposits.push({ date, description, amount });
+            deposits.push({ date, description, amount, type: 'การฝาก' });
             saveDeposits(deposits);
 
             updateCategory(description, amount);
@@ -191,10 +195,12 @@
                 timeZone: 'Asia/Bangkok'
             });
             const total = getTotalAmount();
-            
+            const categories = getCategories();
+            const existingCategory = categories.find(cat => cat.description === description);
+
             if (!description || isNaN(amount) || amount <= 0) return;
 
-            if (amount > total) {
+            if (amount > total || (existingCategory && existingCategory.amount <= 0)) {
                 document.getElementById('errorMessage').textContent = 'ยอดเงินไม่เพียงพอสำหรับการถอน';
                 return;
             } else {
@@ -243,7 +249,10 @@
 
             if (existingCategory) {
                 existingCategory.amount += amount;
-                if (existingCategory.amount <= 0) {
+                if (existingCategory.amount < 0) {
+                    existingCategory.amount = 0;
+                }
+                if (existingCategory.amount === 0) {
                     categories.splice(categories.indexOf(existingCategory), 1);
                 }
             } else if (amount > 0) {
@@ -271,6 +280,10 @@
                 const amountCell = document.createElement('td');
                 amountCell.textContent = deposit.amount.toFixed(2);
                 row.appendChild(amountCell);
+
+                const typeCell = document.createElement('td');
+                typeCell.textContent = deposit.type;
+                row.appendChild(typeCell);
 
                 depositList.appendChild(row);
             });
