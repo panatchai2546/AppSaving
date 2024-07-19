@@ -76,6 +76,10 @@
         .transaction-tables.active {
             display: block;
         }
+        .error-message {
+            color: red;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -92,6 +96,7 @@
             </select>
             <input type="submit" value="เพิ่มรายการ" class="transaction-btn deposit-btn">
         </form>
+        <div id="errorMessage" class="error-message"></div>
         <div id="depositTables" class="transaction-tables active">
             <h2>ตารางการฝาก</h2>
             <table>
@@ -185,7 +190,16 @@
             const date = new Date().toLocaleDateString('th-TH', {
                 timeZone: 'Asia/Bangkok'
             });
+            const total = getTotalAmount();
+            
             if (!description || isNaN(amount) || amount <= 0) return;
+
+            if (amount > total) {
+                document.getElementById('errorMessage').textContent = 'ยอดเงินไม่เพียงพอสำหรับการถอน';
+                return;
+            } else {
+                document.getElementById('errorMessage').textContent = '';
+            }
 
             const withdraws = getWithdraws();
             withdraws.push({ date, description, amount });
@@ -313,6 +327,14 @@
             const totalWithdraws = withdraws.reduce((sum, withdraw) => sum + withdraw.amount, 0);
             const total = totalDeposits - totalWithdraws;
             document.getElementById('totalAmount').textContent = total.toFixed(2);
+        }
+
+        function getTotalAmount() {
+            const deposits = getDeposits();
+            const withdraws = getWithdraws();
+            const totalDeposits = deposits.reduce((sum, deposit) => sum + deposit.amount, 0);
+            const totalWithdraws = withdraws.reduce((sum, withdraw) => sum + withdraw.amount, 0);
+            return totalDeposits - totalWithdraws;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
