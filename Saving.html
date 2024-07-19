@@ -52,12 +52,11 @@
             background-color: #218838;
         }
     
-
         #cat {
             position: absolute;
             width: 150px;
             height: 150px;
-            background-image: url('babe.jpg'); /* เปลี่ยนเป็น path ของรูปภาพแมว */
+            background-image: url('babe.jpg');
             background-size: cover;
             background-position: center;
             border-radius: 50%;
@@ -74,7 +73,6 @@
     <div class="container">
         <h1>ตัวบันทึกการเก็บเงิน</h1>
         <img src="Money.jpg" alt="Money" class="money-img">
-        <p></p>
         <form id="savingsForm">
             <input type="text" id="description" placeholder="คำอธิบาย" required>
             <input type="number" id="amount" placeholder="จำนวนเงิน" required>
@@ -83,6 +81,7 @@
         <table>
             <thead>
                 <tr>
+                    <th>วันที่</th>
                     <th>คำอธิบาย</th>
                     <th>จำนวนเงิน</th>
                     <th>การกระทำ</th>
@@ -104,10 +103,13 @@
         function addSavings() {
             const description = document.getElementById('description').value;
             const amount = parseFloat(document.getElementById('amount').value);
+            const date = new Date().toLocaleDateString('th-TH', {
+                timeZone: 'Asia/Bangkok'
+            });
             if (!description || isNaN(amount)) return;
 
             const savings = getSavings();
-            savings.push({ description, amount });
+            savings.push({ date, description, amount });
             saveSavings(savings);
             renderSavings();
         }
@@ -127,6 +129,10 @@
             const savings = getSavings();
             savings.forEach((saving, index) => {
                 const row = document.createElement('tr');
+
+                const dateCell = document.createElement('td');
+                dateCell.textContent = saving.date;
+                row.appendChild(dateCell);
 
                 const descCell = document.createElement('td');
                 descCell.textContent = saving.description;
@@ -170,8 +176,8 @@
         const cat = document.getElementById('cat');
         let x = 0;
         let y = 0;
-        let dx = 4; // ความเร็วในทิศทาง X
-        let dy = 4; // ความเร็วในทิศทาง Y
+        let dx = 4;
+        let dy = 4;
 
         function animate() {
             const catWidth = cat.offsetWidth;
@@ -179,29 +185,23 @@
             const screenWidth = window.innerWidth;
             const screenHeight = window.innerHeight;
 
-            // อัพเดทตำแหน่ง
             x += dx;
             y += dy;
 
-            // ตรวจสอบการชนขอบและเปลี่ยนทิศทาง
             if (x <= 0 || x + catWidth >= screenWidth) {
-                dx *= -1; // เปลี่ยนทิศทาง X
+                dx *= -1;
             }
             if (y <= 0 || y + catHeight >= screenHeight) {
-                dy *= -1; // เปลี่ยนทิศทาง Y
+                dy *= -1;
             }
 
-            // ตั้งค่าตำแหน่งใหม่
             cat.style.left = `${x}px`;
             cat.style.top = `${y}px`;
 
-            // เรียกใช้งานฟังก์ชันซ้ำ
             requestAnimationFrame(animate);
         }
 
-        // เริ่มการเคลื่อนไหว
         animate();
     </script>
 </body>
 </html>
-
