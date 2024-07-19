@@ -40,26 +40,30 @@
             border-radius: 5px;
         }
         input[type="submit"] {
-            width: 100%;
+            width: 48%;
             padding: 10px;
             background-color: #28a745;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            margin-right: 4%;
         }
         input[type="submit"]:hover {
             background-color: #218838;
         }
-    
-        #cat {
-            position: absolute;
-            width: 150px;
-            height: 150px;
-            background-image: url('babe.jpg');
-            background-size: cover;
-            background-position: center;
-            border-radius: 50%;
+        .withdraw-btn {
+            background-color: #dc3545;
+        }
+        .withdraw-btn:hover {
+            background-color: #c82333;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
         .money-img {
             display: block;
@@ -73,28 +77,44 @@
     <div class="container">
         <h1>บันทึกการเก็บเงิน</h1>
         <img src="Money.jpg" alt="Money" class="money-img">
-        <p></p>
         <form id="savingsForm">
             <input type="text" id="description" placeholder="คำอธิบาย" required>
             <input type="number" id="amount" placeholder="จำนวนเงิน" required>
-            <input type="submit" value="เพิ่ม">
+            <select id="transactionType">
+                <option value="deposit">การฝาก</option>
+                <option value="withdraw">การถอน</option>
+            </select>
+            <input type="submit" value="การฝาก" id="depositBtn">
+            <input type="button" value="การถอน" id="withdrawBtn" class="withdraw-btn">
         </form>
+        <h2>ตารางการฝาก</h2>
         <table>
             <thead>
                 <tr>
                     <th>วันที่</th>
                     <th>คำอธิบาย</th>
                     <th>จำนวนเงิน</th>
-                    <th>การกระทำ</th>
                 </tr>
             </thead>
-            <tbody id="savingsList">
+            <tbody id="depositList">
+                <!-- List will be populated here -->
+            </tbody>
+        </table>
+        <h2>ตารางการถอน</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>วันที่</th>
+                    <th>คำอธิบาย</th>
+                    <th>จำนวนเงิน</th>
+                </tr>
+            </thead>
+            <tbody id="withdrawList">
                 <!-- List will be populated here -->
             </tbody>
         </table>
         <h2>ยอดรวม: <span id="totalAmount">0</span> บาท</h2>
-
-        <h1>ตารางหมวดหมู่</h1>
+        <h2>ตารางหมวดหมู่</h2>
         <table>
             <thead>
                 <tr>
@@ -111,33 +131,64 @@
     <script>
         document.getElementById('savingsForm').addEventListener('submit', function(event) {
             event.preventDefault();
-            addSavings();
+            const transactionType = document.getElementById('transactionType').value;
+            if (transactionType === 'deposit') {
+                addDeposit();
+            } else {
+                addWithdraw();
+            }
         });
 
-        function addSavings() {
+        function addDeposit() {
             const description = document.getElementById('description').value;
             const amount = parseFloat(document.getElementById('amount').value);
             const date = new Date().toLocaleDateString('th-TH', {
                 timeZone: 'Asia/Bangkok'
             });
-            if (!description || isNaN(amount)) return;
+            if (!description || isNaN(amount) || amount <= 0) return;
 
-            const savings = getSavings();
-            savings.push({ date, description, amount });
-            saveSavings(savings);
+            const deposits = getDeposits();
+            deposits.push({ date, description, amount });
+            saveDeposits(deposits);
 
             updateCategory(description, amount);
-            renderSavings();
+            renderDeposits();
             renderCategories();
         }
 
-        function getSavings() {
-            const savings = localStorage.getItem('savings');
-            return savings ? JSON.parse(savings) : [];
+        function addWithdraw() {
+            const description = document.getElementById('description').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const date = new Date().toLocaleDateString('th-TH', {
+                timeZone: 'Asia/Bangkok'
+            });
+            if (!description || isNaN(amount) || amount <= 0) return;
+
+            const withdraws = getWithdraws();
+            withdraws.push({ date, description, amount });
+            saveWithdraws(withdraws);
+
+            updateCategory(description, -amount);
+            renderWithdraws();
+            renderCategories();
         }
 
-        function saveSavings(savings) {
-            localStorage.setItem('savings', JSON.stringify(savings));
+        function getDeposits() {
+            const deposits = localStorage.getItem('deposits');
+            return deposits ? JSON.parse(deposits) : [];
+        }
+
+        function saveDeposits(deposits) {
+            localStorage.setItem('deposits', JSON.stringify(deposits));
+        }
+
+        function getWithdraws() {
+            const withdraws = localStorage.getItem('withdraws');
+            return withdraws ? JSON.parse(withdraws) : [];
+        }
+
+        function saveWithdraws(withdraws) {
+            localStorage.setItem('withdraws', JSON.stringify(withdraws));
         }
 
         function getCategories() {
@@ -155,8 +206,8 @@
 
             if (existingCategory) {
                 existingCategory.amount += amount;
-                if (existingCategory.amount < 0) {
-                    existingCategory.amount = 0;
+                if (existingCategory.amount <= 0) {
+                    categories.splice(categories.indexOf(existingCategory), 1);
                 }
             } else if (amount > 0) {
                 categories.push({ description, amount });
@@ -165,35 +216,50 @@
             saveCategories(categories);
         }
 
-        function renderSavings() {
-            const savingsList = document.getElementById('savingsList');
-            savingsList.innerHTML = '';
-            const savings = getSavings();
-            savings.forEach((saving, index) => {
+        function renderDeposits() {
+            const depositList = document.getElementById('depositList');
+            depositList.innerHTML = '';
+            const deposits = getDeposits();
+            deposits.forEach(deposit => {
                 const row = document.createElement('tr');
 
                 const dateCell = document.createElement('td');
-                dateCell.textContent = saving.date;
+                dateCell.textContent = deposit.date;
                 row.appendChild(dateCell);
 
                 const descCell = document.createElement('td');
-                descCell.textContent = saving.description;
+                descCell.textContent = deposit.description;
                 row.appendChild(descCell);
 
                 const amountCell = document.createElement('td');
-                amountCell.textContent = saving.amount.toFixed(2);
+                amountCell.textContent = deposit.amount.toFixed(2);
                 row.appendChild(amountCell);
 
-                const actionCell = document.createElement('td');
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = 'ลบ';
-                deleteButton.addEventListener('click', function() {
-                    deleteSavings(index);
-                });
-                actionCell.appendChild(deleteButton);
-                row.appendChild(actionCell);
+                depositList.appendChild(row);
+            });
+            updateTotal();
+        }
 
-                savingsList.appendChild(row);
+        function renderWithdraws() {
+            const withdrawList = document.getElementById('withdrawList');
+            withdrawList.innerHTML = '';
+            const withdraws = getWithdraws();
+            withdraws.forEach(withdraw => {
+                const row = document.createElement('tr');
+
+                const dateCell = document.createElement('td');
+                dateCell.textContent = withdraw.date;
+                row.appendChild(dateCell);
+
+                const descCell = document.createElement('td');
+                descCell.textContent = withdraw.description;
+                row.appendChild(descCell);
+
+                const amountCell = document.createElement('td');
+                amountCell.textContent = withdraw.amount.toFixed(2);
+                row.appendChild(amountCell);
+
+                withdrawList.appendChild(row);
             });
             updateTotal();
         }
@@ -217,59 +283,20 @@
             });
         }
 
-        function deleteSavings(index) {
-            const savings = getSavings();
-            const saving = savings[index];
-            savings.splice(index, 1);
-            saveSavings(savings);
-
-            updateCategory(saving.description, -saving.amount);
-            renderSavings();
-            renderCategories();
-        }
-
         function updateTotal() {
-            const savings = getSavings();
-            const total = savings.reduce((sum, saving) => sum + saving.amount, 0);
+            const deposits = getDeposits();
+            const withdraws = getWithdraws();
+            const totalDeposits = deposits.reduce((sum, deposit) => sum + deposit.amount, 0);
+            const totalWithdraws = withdraws.reduce((sum, withdraw) => sum + withdraw.amount, 0);
+            const total = totalDeposits - totalWithdraws;
             document.getElementById('totalAmount').textContent = total.toFixed(2);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            renderSavings();
+            renderDeposits();
+            renderWithdraws();
             renderCategories();
         });
-    </script>
-    <div id="cat"></div>
-    <script>
-        const cat = document.getElementById('cat');
-        let x = 0;
-        let y = 0;
-        let dx = 4;
-        let dy = 4;
-
-        function animate() {
-            const catWidth = cat.offsetWidth;
-            const catHeight = cat.offsetHeight;
-            const screenWidth = window.innerWidth;
-            const screenHeight = window.innerHeight;
-
-            x += dx;
-            y += dy;
-
-            if (x <= 0 || x + catWidth >= screenWidth) {
-                dx *= -1;
-            }
-            if (y <= 0 || y + catHeight >= screenHeight) {
-                dy *= -1;
-            }
-
-            cat.style.left = `${x}px`;
-            cat.style.top = `${y}px`;
-
-            requestAnimationFrame(animate);
-        }
-
-        animate();
     </script>
 </body>
 </html>
