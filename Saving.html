@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตัวบันทึกการเก็บเงิน</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        input[type="text"], input[type="number"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #218838;
+        }
+    
+
+        #cat {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background-image: url('babe.jpg'); /* เปลี่ยนเป็น path ของรูปภาพแมว */
+            background-size: cover;
+            background-position: center;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ตัวบันทึกการเก็บเงิน</h1>
+        <center>
+        <img src="Money.jpg" alt="Money" class="money-img" height="300" weight="300">
+        </center>
+        <form id="savingsForm">
+            <input type="text" id="description" placeholder="คำอธิบาย" required>
+            <input type="number" id="amount" placeholder="จำนวนเงิน" required>
+            <input type="submit" value="เพิ่ม">
+        </form>
+        <table>
+            <thead>
+                <tr>
+                    <th>คำอธิบาย</th>
+                    <th>จำนวนเงิน</th>
+                    <th>การกระทำ</th>
+                </tr>
+            </thead>
+            <tbody id="savingsList">
+                <!-- List will be populated here -->
+            </tbody>
+        </table>
+        <h2>ยอดรวม: <span id="totalAmount">0</span> บาท</h2>
+    </div>
+
+    <script>
+        document.getElementById('savingsForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            addSavings();
+        });
+
+        function addSavings() {
+            const description = document.getElementById('description').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            if (!description || isNaN(amount)) return;
+
+            const savings = getSavings();
+            savings.push({ description, amount });
+            saveSavings(savings);
+            renderSavings();
+        }
+
+        function getSavings() {
+            const savings = localStorage.getItem('savings');
+            return savings ? JSON.parse(savings) : [];
+        }
+
+        function saveSavings(savings) {
+            localStorage.setItem('savings', JSON.stringify(savings));
+        }
+
+        function renderSavings() {
+            const savingsList = document.getElementById('savingsList');
+            savingsList.innerHTML = '';
+            const savings = getSavings();
+            savings.forEach((saving, index) => {
+                const row = document.createElement('tr');
+
+                const descCell = document.createElement('td');
+                descCell.textContent = saving.description;
+                row.appendChild(descCell);
+
+                const amountCell = document.createElement('td');
+                amountCell.textContent = saving.amount.toFixed(2);
+                row.appendChild(amountCell);
+
+                const actionCell = document.createElement('td');
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'ลบ';
+                deleteButton.addEventListener('click', function() {
+                    deleteSavings(index);
+                });
+                actionCell.appendChild(deleteButton);
+                row.appendChild(actionCell);
+
+                savingsList.appendChild(row);
+            });
+            updateTotal();
+        }
+
+        function deleteSavings(index) {
+            const savings = getSavings();
+            savings.splice(index, 1);
+            saveSavings(savings);
+            renderSavings();
+        }
+
+        function updateTotal() {
+            const savings = getSavings();
+            const total = savings.reduce((sum, saving) => sum + saving.amount, 0);
+            document.getElementById('totalAmount').textContent = total.toFixed(2);
+        }
+
+        document.addEventListener('DOMContentLoaded', renderSavings);
+    </script>
+    <div id="cat"></div>
+    <script>
+        const cat = document.getElementById('cat');
+        let x = 0;
+        let y = 0;
+        let dx = 4; // ความเร็วในทิศทาง X
+        let dy = 4; // ความเร็วในทิศทาง Y
+
+        function animate() {
+            const catWidth = cat.offsetWidth;
+            const catHeight = cat.offsetHeight;
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+
+            // อัพเดทตำแหน่ง
+            x += dx;
+            y += dy;
+
+            // ตรวจสอบการชนขอบและเปลี่ยนทิศทาง
+            if (x <= 0 || x + catWidth >= screenWidth) {
+                dx *= -1; // เปลี่ยนทิศทาง X
+            }
+            if (y <= 0 || y + catHeight >= screenHeight) {
+                dy *= -1; // เปลี่ยนทิศทาง Y
+            }
+
+            // ตั้งค่าตำแหน่งใหม่
+            cat.style.left = `${x}px`;
+            cat.style.top = `${y}px`;
+
+            // เรียกใช้งานฟังก์ชันซ้ำ
+            requestAnimationFrame(animate);
+        }
+
+        // เริ่มการเคลื่อนไหว
+        animate();
+    </script>
+</body>
+</html>
+
