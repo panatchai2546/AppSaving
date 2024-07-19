@@ -72,8 +72,8 @@
 <body>
     <div class="container">
         <h1>บันทึกการเก็บเงิน</h1>
-        <p></p>
         <img src="Money.jpg" alt="Money" class="money-img">
+        <p></p>
         <form id="savingsForm">
             <input type="text" id="description" placeholder="คำอธิบาย" required>
             <input type="number" id="amount" placeholder="จำนวนเงิน" required>
@@ -93,6 +93,19 @@
             </tbody>
         </table>
         <h2>ยอดรวม: <span id="totalAmount">0</span> บาท</h2>
+
+        <h1>ตารางหมวดหมู่</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>คำอธิบาย</th>
+                    <th>จำนวนเงินรวม</th>
+                </tr>
+            </thead>
+            <tbody id="categoryList">
+                <!-- Categories will be populated here -->
+            </tbody>
+        </table>
     </div>
 
     <script>
@@ -110,16 +123,12 @@
             if (!description || isNaN(amount)) return;
 
             const savings = getSavings();
-            const existing = savings.find(saving => saving.description === description);
-
-            if (existing) {
-                existing.amount += amount;
-            } else {
-                savings.push({ date, description, amount });
-            }
-
+            savings.push({ date, description, amount });
             saveSavings(savings);
+
+            updateCategory(description, amount);
             renderSavings();
+            renderCategories();
         }
 
         function getSavings() {
@@ -129,6 +138,28 @@
 
         function saveSavings(savings) {
             localStorage.setItem('savings', JSON.stringify(savings));
+        }
+
+        function getCategories() {
+            const categories = localStorage.getItem('categories');
+            return categories ? JSON.parse(categories) : [];
+        }
+
+        function saveCategories(categories) {
+            localStorage.setItem('categories', JSON.stringify(categories));
+        }
+
+        function updateCategory(description, amount) {
+            const categories = getCategories();
+            const existingCategory = categories.find(cat => cat.description === description);
+
+            if (existingCategory) {
+                existingCategory.amount += amount;
+            } else {
+                categories.push({ description, amount });
+            }
+
+            saveCategories(categories);
         }
 
         function renderSavings() {
@@ -164,11 +195,34 @@
             updateTotal();
         }
 
+        function renderCategories() {
+            const categoryList = document.getElementById('categoryList');
+            categoryList.innerHTML = '';
+            const categories = getCategories();
+            categories.forEach(category => {
+                const row = document.createElement('tr');
+
+                const descCell = document.createElement('td');
+                descCell.textContent = category.description;
+                row.appendChild(descCell);
+
+                const amountCell = document.createElement('td');
+                amountCell.textContent = category.amount.toFixed(2);
+                row.appendChild(amountCell);
+
+                categoryList.appendChild(row);
+            });
+        }
+
         function deleteSavings(index) {
             const savings = getSavings();
+            const saving = savings[index];
             savings.splice(index, 1);
             saveSavings(savings);
+
+            updateCategory(saving.description, -saving.amount);
             renderSavings();
+            renderCategories();
         }
 
         function updateTotal() {
@@ -177,7 +231,10 @@
             document.getElementById('totalAmount').textContent = total.toFixed(2);
         }
 
-        document.addEventListener('DOMContentLoaded', renderSavings);
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSavings();
+            renderCategories();
+        });
     </script>
     <div id="cat"></div>
     <script>
