@@ -39,24 +39,23 @@
             border: 1px solid #ccc;
             border-radius: 5px;
         }
-        input[type="submit"] {
+        input[type="submit"], .transaction-btn {
             width: 48%;
             padding: 10px;
-            background-color: #28a745;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             margin-right: 4%;
         }
-        input[type="submit"]:hover {
-            background-color: #218838;
+        input[type="submit"]:hover, .transaction-btn:hover {
+            opacity: 0.8;
         }
         .withdraw-btn {
             background-color: #dc3545;
         }
-        .withdraw-btn:hover {
-            background-color: #c82333;
+        .deposit-btn {
+            background-color: #28a745;
         }
         select {
             width: 100%;
@@ -70,6 +69,12 @@
             margin: 0 auto;
             max-width: 100%;
             height: auto;
+        }
+        .transaction-tables {
+            display: none;
+        }
+        .transaction-tables.active {
+            display: block;
         }
     </style>
 </head>
@@ -85,35 +90,38 @@
                 <option value="deposit">การฝาก</option>
                 <option value="withdraw">การถอน</option>
             </select>
-            <input type="submit" value="การฝาก" id="depositBtn">
-            <input type="button" value="การถอน" id="withdrawBtn" class="withdraw-btn">
+            <input type="submit" value="เพิ่มรายการ" class="transaction-btn deposit-btn">
         </form>
-        <h2>ตารางการฝาก</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>วันที่</th>
-                    <th>คำอธิบาย</th>
-                    <th>จำนวนเงิน</th>
-                </tr>
-            </thead>
-            <tbody id="depositList">
-                <!-- List will be populated here -->
-            </tbody>
-        </table>
-        <h2>ตารางการถอน</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>วันที่</th>
-                    <th>คำอธิบาย</th>
-                    <th>จำนวนเงิน</th>
-                </tr>
-            </thead>
-            <tbody id="withdrawList">
-                <!-- List will be populated here -->
-            </tbody>
-        </table>
+        <div id="depositTables" class="transaction-tables active">
+            <h2>ตารางการฝาก</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>วันที่</th>
+                        <th>คำอธิบาย</th>
+                        <th>จำนวนเงิน</th>
+                    </tr>
+                </thead>
+                <tbody id="depositList">
+                    <!-- List will be populated here -->
+                </tbody>
+            </table>
+        </div>
+        <div id="withdrawTables" class="transaction-tables">
+            <h2>ตารางการถอน</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>วันที่</th>
+                        <th>คำอธิบาย</th>
+                        <th>จำนวนเงิน</th>
+                    </tr>
+                </thead>
+                <tbody id="withdrawList">
+                    <!-- List will be populated here -->
+                </tbody>
+            </table>
+        </div>
         <h2>ยอดรวม: <span id="totalAmount">0</span> บาท</h2>
         <h2>ตารางหมวดหมู่</h2>
         <table>
@@ -130,6 +138,20 @@
     </div>
 
     <script>
+        document.getElementById('transactionType').addEventListener('change', function() {
+            const transactionType = this.value;
+            const depositTables = document.getElementById('depositTables');
+            const withdrawTables = document.getElementById('withdrawTables');
+            
+            if (transactionType === 'deposit') {
+                depositTables.classList.add('active');
+                withdrawTables.classList.remove('active');
+            } else {
+                withdrawTables.classList.add('active');
+                depositTables.classList.remove('active');
+            }
+        });
+
         document.getElementById('savingsForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const transactionType = document.getElementById('transactionType').value;
