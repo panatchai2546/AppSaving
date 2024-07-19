@@ -183,7 +183,12 @@
             const categories = getCategories();
             const existingCategory = categories.find(cat => cat.description === description);
 
-            if (amount > total || (existingCategory && existingCategory.amount < amount)) {
+            if (!existingCategory) {
+                document.getElementById('errorMessage').textContent = 'ไม่พบคำอธิบายที่ตรงกันในหมวดหมู่';
+                return;
+            }
+
+            if (amount > total || existingCategory.amount < amount) {
                 document.getElementById('errorMessage').textContent = 'ยอดเงินไม่เพียงพอสำหรับการถอน';
                 return;
             } else {
@@ -280,26 +285,18 @@
             });
         }
 
-        function updateTotal() {
-            const transactions = getTransactions();
-            const totalDeposits = transactions.filter(tx => tx.type === 'การฝาก').reduce((sum, tx) => sum + tx.amount, 0);
-            const totalWithdraws = transactions.filter(tx => tx.type === 'การถอน').reduce((sum, tx) => sum + tx.amount, 0);
-            const total = totalDeposits - totalWithdraws;
-            document.getElementById('totalAmount').textContent = total.toFixed(2);
-        }
-
         function getTotalAmount() {
-            const transactions = getTransactions();
-            const totalDeposits = transactions.filter(tx => tx.type === 'การฝาก').reduce((sum, tx) => sum + tx.amount, 0);
-            const totalWithdraws = transactions.filter(tx => tx.type === 'การถอน').reduce((sum, tx) => sum + tx.amount, 0);
-            return totalDeposits - totalWithdraws;
+            const categories = getCategories();
+            return categories.reduce((total, category) => total + category.amount, 0);
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('transactionType').dispatchEvent(new Event('change')); // Trigger change event to set initial state
-            renderTransactions();
-            renderCategories();
-        });
+        function updateTotal() {
+            const totalAmount = document.getElementById('totalAmount');
+            totalAmount.textContent = getTotalAmount().toFixed(2);
+        }
+
+        renderTransactions();
+        renderCategories();
     </script>
 </body>
 </html>
