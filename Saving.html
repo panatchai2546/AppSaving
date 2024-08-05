@@ -241,11 +241,13 @@
 
             monthSelect.addEventListener('change', () => {
                 generateCalendar(monthSelect.value, yearSelect.value);
+                loadNotes();
                 loadTransactions();
             });
 
             yearSelect.addEventListener('change', () => {
                 generateCalendar(monthSelect.value, yearSelect.value);
+                loadNotes();
                 loadTransactions();
             });
 
@@ -261,6 +263,7 @@
                 monthSelect.value = month;
                 yearSelect.value = year;
                 generateCalendar(month, year);
+                loadNotes();
                 loadTransactions();
             });
 
@@ -276,6 +279,7 @@
                 monthSelect.value = month;
                 yearSelect.value = year;
                 generateCalendar(month, year);
+                loadNotes();
                 loadTransactions();
             });
 
