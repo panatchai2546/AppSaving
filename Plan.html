@@ -81,6 +81,7 @@
             right: 5px;
             overflow: hidden;
             text-overflow: ellipsis;
+            cursor: text;
         }
 
         .expense-tracker {
@@ -226,8 +227,7 @@
                     }
                     let cell = document.createElement('td');
                     cell.id = `day-${year}-${month}-${i}`;
-                    cell.innerHTML = `<div>${i}</div><div id="note-${year}-${month}-${i}" class="note"></div>`;
-                    cell.addEventListener('dblclick', editNote);
+                    cell.innerHTML = `<div>${i}</div><div id="note-${year}-${month}-${i}" class="note" contenteditable="true"></div>`;
                     row.appendChild(cell);
                 }
                 calendarBody.appendChild(row);
@@ -235,10 +235,12 @@
 
             monthSelect.addEventListener('change', () => {
                 generateCalendar(monthSelect.value, yearSelect.value);
+                loadTransactions();
             });
 
             yearSelect.addEventListener('change', () => {
                 generateCalendar(monthSelect.value, yearSelect.value);
+                loadTransactions();
             });
 
             document.getElementById('prevMonth').addEventListener('click', () => {
@@ -253,6 +255,7 @@
                 monthSelect.value = month;
                 yearSelect.value = year;
                 generateCalendar(month, year);
+                loadTransactions();
             });
 
             document.getElementById('nextMonth').addEventListener('click', () => {
@@ -267,6 +270,7 @@
                 monthSelect.value = month;
                 yearSelect.value = year;
                 generateCalendar(month, year);
+                loadTransactions();
             });
 
             function addTransaction() {
@@ -338,13 +342,6 @@
                         transactionBody.appendChild(row);
                     }
                 });
-            }
-
-            function editNote() {
-                const note = prompt("แก้ไขบันทึก:", this.textContent);
-                if (note !== null) {
-                    this.textContent = note;
-                }
             }
 
             generateCalendar(currentMonth, currentYear);
