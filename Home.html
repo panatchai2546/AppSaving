@@ -24,21 +24,18 @@
             width: 80%;
             max-width: 600px;
         }
-        .button {
-            display: block;
+        .link-wrapper {
             margin: 20px auto;
-            border: none;
-            background-color: #4caf50; /* สีเขียว */
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-size: 18px;
-            font-weight: bold;
-            transition: background-color 0.3s;
+            display: inline-block;
+            transition: transform 0.3s, box-shadow 0.3s;
         }
-        .button:hover {
-            background-color: #388e3c; /* สีเขียวเข้ม */
+        .link-wrapper:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        .link-wrapper:active {
+            transform: scale(0.98);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         img {
             width: 100%;
@@ -46,18 +43,17 @@
             height: auto;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: block;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="https://panatchai2546.github.io/AppSaving/Saving.html" class="button">
+        <a href="https://panatchai2546.github.io/AppSaving/Saving.html" class="link-wrapper">
             <img src="Money.jpg" alt="Saving Page">
-            <p>ไปที่หน้า Saving</p>
         </a>
-        <a href="https://panatchai2546.github.io/AppSaving/Plan.html" class="button">
+        <a href="https://panatchai2546.github.io/AppSaving/Plan.html" class="link-wrapper">
             <img src="Plan.jpg" alt="Plan Page">
-            <p>ไปที่หน้า Plan</p>
         </a>
     </div>
 </body>
