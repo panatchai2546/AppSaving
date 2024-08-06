@@ -35,41 +35,20 @@
         .header img {
             max-width: 100%;
             height: auto;
+            cursor: pointer;
         }
         .container {
             width: 100%;
-            max-width: 1000px;
+            max-width: 800px;
             margin: 0 auto;
-            padding: 30px;
+            padding: 20px;
             border: 1px solid #ccc;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             background-color: #fff;
             box-sizing: border-box;
-        }
-        .calendar {
-            border-radius: 8px;
-            background-color: #4CAF50;
-            color: white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 10px;
-            margin-bottom: 20px;
-            width: 100%;
-            box-sizing: border-box;
-            overflow-x: auto;
-        }
-        .calendar th, .calendar td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            box-sizing: border-box;
-        }
-        .calendar th {
-            background-color: #4CAF50;
-            color: white;
-        }
-        .calendar td {
-            background-color: #ffffff;
-            color: #333;
+            overflow-y: auto; /* Allow vertical scrolling */
+            max-height: calc(100vh - 60px); /* Adjust max-height to fit within the viewport */
         }
         .expenses {
             border-radius: 8px;
@@ -96,11 +75,7 @@
         }
         td {
             background-color: #ffffff;
-        }
-        .date-number {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 5px;
+            color: black;
         }
         .input-note, .dropdown, .add-entry input, .add-entry select, .add-entry button {
             width: calc(100% - 16px);
@@ -156,37 +131,55 @@
             margin-bottom: 20px;
             width: 100%;
             text-align: center;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
+        }
+        .controls h2 {
+            margin: 10px 0;
+            font-size: 18px;
+            color: #4CAF50;
+        }
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+        .day-header, .calendar div {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .calendar div {
+            border: 1px solid #4CAF50;
+            background-color: #fff;
+            color: black;
+            height: 50px; /* Ensure consistent height */
+            line-height: 50px; /* Center text vertically */
+        }
+        .calendar div.today {
+            background-color: lightgreen;
+            color: #4CAF50;
         }
         .back-btn {
-            position: relative;
-            display: inline-block;
+            position: absolute;
+            top: 20px;
+            left: 20px;
         }
         .back-img {
             width: 40px;
             height: auto;
         }
-        .plan-img {
-            display: block;
-            margin: 20px auto;
-            max-width: 100%;
-            height: auto;
-        }
-        
+
         /* Responsive design */
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 20px;
             }
-            .calendar th, .calendar td {
+            th, td {
                 padding: 5px;
             }
             .expenses {
-                padding: 5px;
-            }
-            th, td {
                 padding: 5px;
             }
         }
@@ -198,13 +191,10 @@
             .header img {
                 width: 30px;
             }
-            .calendar th, .calendar td {
+            th, td {
                 padding: 3px;
             }
             .expenses {
-                padding: 3px;
-            }
-            th, td {
                 padding: 3px;
             }
             .controls {
@@ -220,6 +210,12 @@
                 margin: 3px 0;
             }
         }
+        .plan-img {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            height: auto;
+        }
     </style>
 </head>
 <body>
@@ -228,12 +224,11 @@
     <a href="https://panatchai2546.github.io/AppSaving/Home.html" class="back-btn">
         <img src="back_home.png" alt="ย้อนกลับ" class="back-img">
     </a>
-    <!-- <h1>บันทึกการวางแผนการเงิน</h1> -->
 </div>
 <div class="container">
-    <h1>บันทึกการวางแผนการเงิน</h1>
-    <img src="Plan.jpg" alt="Financial Plan" class="plan-img">
     <div class="controls">
+        <h2>การบันทึกการวางแผนการเงิน</h2>
+        <img src="Plan.jpg" alt="Plan" class="plan-img">
         <select id="month" class="dropdown">
             <!-- Months will be added here by JavaScript -->
         </select>
@@ -241,11 +236,8 @@
             <!-- Years will be added here by JavaScript -->
         </select>
     </div>
-    <div class="calendar">
-        <table id="calendarTable">
-            <!-- Calendar will be generated here -->
-        </table>
-    </div>
+
+    <div id="calendar" class="calendar"></div>
 
     <div class="add-entry">
         <input type="text" id="entryDescription" placeholder="รายละเอียด">
@@ -274,67 +266,7 @@
 </div>
 
 <script>
-    const monthSelect = document.getElementById('month');
-    const yearSelect = document.getElementById('year');
-    const calendarTable = document.getElementById('calendarTable');
-    const expensesTable = document.getElementById('expensesTable');
-    let totalBalance = 0;
-
-    function createCalendar(year, month) {
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const firstDay = new Date(year, month, 1).getDay();
-        const storedNotes = JSON.parse(localStorage.getItem('notes')) || {};
-
-        calendarTable.innerHTML = '';
-
-        // Create header
-        const headerRow = document.createElement('tr');
-        ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
-            const th = document.createElement('th');
-            th.textContent = day;
-            headerRow.appendChild(th);
-        });
-        calendarTable.appendChild(headerRow);
-
-        // Create days
-        let row = document.createElement('tr');
-        for (let i = 0; i < firstDay; i++) {
-            const cell = document.createElement('td');
-            row.appendChild(cell);
-        }
-
-        for (let day = 1; day <= daysInMonth; day++) {
-            const cell = document.createElement('td');
-            const dateNumber = document.createElement('span');
-            dateNumber.textContent = day;
-            dateNumber.classList.add('date-number');
-            cell.appendChild(dateNumber);
-
-            const note = document.createElement('textarea');
-            note.classList.add('input-note');
-            const noteKey = `${year}-${month + 1}-${day}`;
-            note.value = storedNotes[noteKey] || '';
-            note.addEventListener('input', () => {
-                storedNotes[noteKey] = note.value;
-                localStorage.setItem('notes', JSON.stringify(storedNotes));
-            });
-            cell.appendChild(note);
-            row.appendChild(cell);
-
-            if ((day + firstDay) % 7 === 0) {
-                calendarTable.appendChild(row);
-                row = document.createElement('tr');
-            }
-        }
-
-        while (row.children.length < 7) {
-            const cell = document.createElement('td');
-            row.appendChild(cell);
-        }
-
-        calendarTable.appendChild(row);
-    }
-
+    // JavaScript code to handle entries
     function addEntry() {
         const entryType = document.getElementById('entryType').value;
         const entryDescription = document.getElementById('entryDescription').value;
@@ -368,27 +300,40 @@
 
             expensesTable.appendChild(newRow);
 
-            document.getElementById('totalBalance').textContent = totalBalance.toFixed(2);
-
-            // Save to local storage
-            const entries = JSON.parse(localStorage.getItem('entries')) || [];
+            // Save entries to local storage
+            const currentMonth = monthSelect.value;
+            const currentYear = yearSelect.value;
+            const entries = JSON.parse(localStorage.getItem(`${currentYear}-${currentMonth}`)) || [];
             entries.push({
                 type: entryType,
                 description: entryDescription,
                 amount: entryAmount,
                 balance: totalBalance
             });
-            localStorage.setItem('entries', JSON.stringify(entries));
+            localStorage.setItem(`${currentYear}-${currentMonth}`, JSON.stringify(entries));
 
             // Clear input fields
             document.getElementById('entryDescription').value = '';
             document.getElementById('entryAmount').value = '';
+            document.getElementById('entryType').value = 'income';
         }
     }
 
     // Load entries from local storage
     function loadEntries() {
-        const entries = JSON.parse(localStorage.getItem('entries')) || [];
+        const currentMonth = monthSelect.value;
+        const currentYear = yearSelect.value;
+        const entries = JSON.parse(localStorage.getItem(`${currentYear}-${currentMonth}`)) || [];
+        expensesTable.innerHTML = `
+            <tr>
+                <th>รายการ</th>
+                <th>รายรับ</th>
+                <th>รายจ่าย</th>
+                <th class="total-balance">คงเหลือ</th>
+            </tr>
+        `; // Clear the table and add the header row
+
+        totalBalance = 0;
         entries.forEach(entry => {
             const newRow = document.createElement('tr');
             const descriptionCell = document.createElement('td');
@@ -414,13 +359,58 @@
             newRow.appendChild(balanceCell);
 
             expensesTable.appendChild(newRow);
+
+            totalBalance = entry.balance; // Update the total balance with the latest balance
         });
 
-        if (entries.length > 0) {
-            totalBalance = entries[entries.length - 1].balance;
-            document.getElementById('totalBalance').textContent = totalBalance.toFixed(2);
+        document.getElementById('totalBalance').textContent = totalBalance.toFixed(2);
+    }
+
+    // Generate calendar
+    function generateCalendar(month, year) {
+        const calendar = document.getElementById('calendar');
+        calendar.innerHTML = ''; // Clear the calendar
+
+        // Add day headers
+        const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        daysOfWeek.forEach(day => {
+            const dayHeader = document.createElement('div');
+            dayHeader.classList.add('day-header');
+            dayHeader.textContent = day;
+            calendar.appendChild(dayHeader);
+        });
+
+        // Get the first day of the month
+        const firstDay = new Date(year, month).getDay();
+
+        // Get the number of days in the month
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        // Fill in the blanks before the first day of the month
+        for (let i = 0; i < firstDay; i++) {
+            const blank = document.createElement('div');
+            calendar.appendChild(blank);
+        }
+
+        // Add the days of the month
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dayCell = document.createElement('div');
+            dayCell.textContent = day;
+
+            // Highlight the current day
+            const today = new Date();
+            if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                dayCell.classList.add('today');
+            }
+
+            calendar.appendChild(dayCell);
         }
     }
+
+    const monthSelect = document.getElementById('month');
+    const yearSelect = document.getElementById('year');
+    const expensesTable = document.getElementById('expensesTable');
+    let totalBalance = 0;
 
     for (let i = 0; i < 12; i++) {
         const option = document.createElement('option');
@@ -440,10 +430,16 @@
     monthSelect.value = new Date().getMonth();
     yearSelect.value = new Date().getFullYear();
 
-    monthSelect.addEventListener('change', () => createCalendar(parseInt(yearSelect.value), parseInt(monthSelect.value)));
-    yearSelect.addEventListener('change', () => createCalendar(parseInt(yearSelect.value), parseInt(monthSelect.value)));
+    monthSelect.addEventListener('change', () => {
+        generateCalendar(parseInt(monthSelect.value), parseInt(yearSelect.value));
+        loadEntries();
+    });
+    yearSelect.addEventListener('change', () => {
+        generateCalendar(parseInt(monthSelect.value), parseInt(yearSelect.value));
+        loadEntries();
+    });
 
-    createCalendar(currentYear, new Date().getMonth());
+    generateCalendar(new Date().getMonth(), new Date().getFullYear());
     loadEntries();
 </script>
 
