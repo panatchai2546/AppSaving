@@ -80,10 +80,34 @@
             color: red;
             text-align: center;
         }
+                .container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: inline-block;
+        }
+
+        .back-img {
+            width: 40px; /* Adjust the width as needed */
+            height: auto;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <a href="https://panatchai2546.github.io/AppSaving/Home.html" class="back-btn">
+            <img src="back_web.png" alt="ย้อนกลับ" class="back-img">
+        </a>
         <h1>บันทึกการเก็บเงิน</h1>
         <img src="Money.jpg" alt="Money" class="money-img">
         <p></p>
