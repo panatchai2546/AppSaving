@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>หน้าโฮม</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e0f2f1; /* สีพื้นหลังเขียวอ่อน */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 80%;
+            max-width: 600px;
+        }
+        .link-wrapper {
+            margin: 20px auto;
+            display: inline-block;
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .link-wrapper:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        .link-wrapper:active {
+            transform: scale(0.98);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        img {
+            width: 300px; /* กำหนดขนาดของรูปภาพ */
+            height: 200px; /* กำหนดขนาดของรูปภาพ */
+            object-fit: cover; /* ให้รูปภาพปรับขนาดได้ดี */
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: block;
+        }
+        .caption {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="https://panatchai2546.github.io/AppSaving/Saving.html" class="link-wrapper">
+            <img src="Money.jpg" alt="Saving Page">
+            <p class="caption">บันทึกการเก็บเงิน</p>
+        </a>
+        <a href="https://panatchai2546.github.io/AppSaving/Plan.html" class="link-wrapper">
+            <img src="Plan.jpg" alt="Plan Page">
+            <p class="caption">บันทึกการวางแผนการเงิน</p>
+        </a>
+    </div>
+</body>
+</html>
