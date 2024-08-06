@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บันทึกการวางแผนการเงิน</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #4CAF50;
+        }
+        .header img {
+            max-width: 100%;
+            height: auto;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            box-sizing: border-box;
+        }
+        .calendar {
+            border-radius: 8px;
+            background-color: #4CAF50;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+            box-sizing: border-box;
+            overflow-x: auto;
+        }
+        .calendar th, .calendar td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+        }
+        .calendar th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .calendar td {
+            background-color: #ffffff;
+            color: #333;
+        }
+        .expenses {
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            width: 100%;
+            max-height: 500px;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #4CAF50;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        td {
+            background-color: #ffffff;
+        }
+        .date-number {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .input-note, .dropdown, .add-entry input, .add-entry select, .add-entry button {
+            width: calc(100% - 16px);
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+        .add-entry {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            width: 100%;
+        }
+        .add-entry input, .add-entry select, .add-entry button {
+            margin-bottom: 10px;
+        }
+        .add-entry button {
+            padding: 8px 12px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .add-entry button:hover {
+            background-color: #45a049;
+        }
+        .balance {
+            font-weight: bold;
+            color: #4CAF50;
+            text-align: right;
+            padding-right: 8px;
+            margin-top: 10px;
+        }
+        .balance span {
+            display: inline-block;
+            min-width: 100px;
+        }
+        .total-balance {
+            text-align: right;
+            padding-right: 8px;
+        }
+        .dropdown {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .controls {
+            margin-bottom: 20px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .back-btn {
+            position: relative;
+            display: inline-block;
+        }
+        .back-img {
+            width: 40px;
+            height: auto;
+        }
+        .plan-img {
+            display: block;
+            margin: 20px auto;
+            max-width: 100%;
+            height: auto;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 20px;
+            }
+            .calendar th, .calendar td {
+                padding: 5px;
+            }
+            .expenses {
+                padding: 5px;
+            }
+            th, td {
+                padding: 5px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 18px;
+            }
+            .header img {
+                width: 30px;
+            }
+            .calendar th, .calendar td {
+                padding: 3px;
+            }
+            .expenses {
+                padding: 3px;
+            }
+            th, td {
+                padding: 3px;
+            }
+            .controls {
+                flex-direction: column;
+                gap: 5px;
+            }
+            .add-entry {
+                width: 100%;
+                padding: 0;
+            }
+            .add-entry input, .add-entry select, .add-entry button {
+                width: calc(100% - 6px);
+                margin: 3px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="https://panatchai2546.github.io/AppSaving/HomeIce.html" class="back-btn">
+        <img src="back_home.png" alt="ย้อนกลับ" class="back-img">
+    </a>
+    <!-- <h1>บันทึกการวางแผนการเงิน</h1> -->
+</div>
+<div class="container">
+    <!-- <h1>บันทึกการวางแผนการเงิน</h1> -->
+    <!-- <img src="Plan.jpg" alt="Financial Plan" class="plan-img"> -->
+    <div class="controls">
+        <select id="month" class="dropdown">
+            <!-- Months will be added here by JavaScript -->
+        </select>
+        <select id="year" class="dropdown">
+            <!-- Years will be added here by JavaScript -->
+        </select>
+    </div>
+    <div class="calendar">
+        <table id="calendarTable">
+            <!-- Calendar will be generated here -->
+        </table>
+    </div>
+
+    <div class="add-entry">
+        <input type="text" id="entryDescription" placeholder="รายละเอียด">
+        <input type="number" id="entryAmount" placeholder="จำนวนเงิน">
+        <select id="entryType">
+            <option value="income">รายรับ</option>
+            <option value="expense">รายจ่าย</option>
+        </select>
+        <button onclick="addEntry()">เพิ่มรายการ</button>
+    </div>
+
+    <div class="expenses">
+        <h2>ตารางรายรับ - รายจ่าย</h2>
+        <table id="expensesTable">
+            <tr>
+                <th>รายการ</th>
+                <th>รายรับ</th>
+                <th>รายจ่าย</th>
+                <th class="total-balance">คงเหลือ</th>
+            </tr>
+        </table>
+        <div class="balance">
+            คงเหลือทั้งหมด: <span id="totalBalance">0</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    const monthSelect = document.getElementById('month');
+    const yearSelect = document.getElementById('year');
+    const calendarTable = document.getElementById('calendarTable');
+    const expensesTable = document.getElementById('expensesTable');
+    let totalBalance = 0;
+
+    function createCalendar(year, month) {
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const firstDay = new Date(year, month, 1).getDay();
+        const storedNotes = JSON.parse(localStorage.getItem('notes')) || {};
+
+        calendarTable.innerHTML = '';
+
+        // Create header
+        const headerRow = document.createElement('tr');
+        ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
+            const th = document.createElement('th');
+            th.textContent = day;
+            headerRow.appendChild(th);
+        });
+        calendarTable.appendChild(headerRow);
+
+        // Create days
+        let row = document.createElement('tr');
+        for (let i = 0; i < firstDay; i++) {
+            const cell = document.createElement('td');
+            row.appendChild(cell);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const cell = document.createElement('td');
+            const dateNumber = document.createElement('span');
+            dateNumber.textContent = day;
+            dateNumber.classList.add('date-number');
+            cell.appendChild(dateNumber);
+
+            const note = document.createElement('textarea');
+            note.classList.add('input-note');
+            const noteKey = `${year}-${month + 1}-${day}`;
+            note.value = storedNotes[noteKey] || '';
+            note.addEventListener('input', () => {
+                storedNotes[noteKey] = note.value;
+                localStorage.setItem('notes', JSON.stringify(storedNotes));
+            });
+            cell.appendChild(note);
+            row.appendChild(cell);
+
+            if ((day + firstDay) % 7 === 0) {
+                calendarTable.appendChild(row);
+                row = document.createElement('tr');
+            }
+        }
+
+        while (row.children.length < 7) {
+            const cell = document.createElement('td');
+            row.appendChild(cell);
+        }
+
+        calendarTable.appendChild(row);
+    }
+
+    function addEntry() {
+        const entryType = document.getElementById('entryType').value;
+        const entryDescription = document.getElementById('entryDescription').value;
+        const entryAmount = parseFloat(document.getElementById('entryAmount').value);
+
+        if (entryDescription && !isNaN(entryAmount)) {
+            const newRow = document.createElement('tr');
+            const descriptionCell = document.createElement('td');
+            descriptionCell.textContent = entryDescription;
+            newRow.appendChild(descriptionCell);
+
+            const incomeCell = document.createElement('td');
+            const expenseCell = document.createElement('td');
+
+            if (entryType === 'income') {
+                incomeCell.textContent = entryAmount;
+                expenseCell.textContent = '';
+                totalBalance += entryAmount;
+            } else {
+                incomeCell.textContent = '';
+                expenseCell.textContent = entryAmount;
+                totalBalance -= entryAmount;
+            }
+
+            newRow.appendChild(incomeCell);
+            newRow.appendChild(expenseCell);
+
+            const balanceCell = document.createElement('td');
+            balanceCell.textContent = totalBalance.toFixed(2); // Ensure 2 decimal places
+            newRow.appendChild(balanceCell);
+
+            expensesTable.appendChild(newRow);
+
+            document.getElementById('totalBalance').textContent = totalBalance.toFixed(2);
+
+            // Save to local storage
+            const entries = JSON.parse(localStorage.getItem('entries')) || [];
+            entries.push({
+                type: entryType,
+                description: entryDescription,
+                amount: entryAmount,
+                balance: totalBalance
+            });
+            localStorage.setItem('entries', JSON.stringify(entries));
+
+            // Clear input fields
+            document.getElementById('entryDescription').value = '';
+            document.getElementById('entryAmount').value = '';
+        }
+    }
+
+    // Load entries from local storage
+    function loadEntries() {
+        const entries = JSON.parse(localStorage.getItem('entries')) || [];
+        entries.forEach(entry => {
+            const newRow = document.createElement('tr');
+            const descriptionCell = document.createElement('td');
+            descriptionCell.textContent = entry.description;
+            newRow.appendChild(descriptionCell);
+
+            const incomeCell = document.createElement('td');
+            const expenseCell = document.createElement('td');
+
+            if (entry.type === 'income') {
+                incomeCell.textContent = entry.amount;
+                expenseCell.textContent = '';
+            } else {
+                incomeCell.textContent = '';
+                expenseCell.textContent = entry.amount;
+            }
+
+            newRow.appendChild(incomeCell);
+            newRow.appendChild(expenseCell);
+
+            const balanceCell = document.createElement('td');
+            balanceCell.textContent = entry.balance.toFixed(2); // Ensure 2 decimal places
+            newRow.appendChild(balanceCell);
+
+            expensesTable.appendChild(newRow);
+        });
+
+        if (entries.length > 0) {
+            totalBalance = entries[entries.length - 1].balance;
+            document.getElementById('totalBalance').textContent = totalBalance.toFixed(2);
+        }
+    }
+
+    for (let i = 0; i < 12; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = new Date(0, i).toLocaleString('default', { month: 'long' });
+        monthSelect.appendChild(option);
+    }
+
+    const currentYear = new Date().getFullYear();
+    for (let i = currentYear - 5; i <= currentYear + 5; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i;
+        yearSelect.appendChild(option);
+    }
+
+    monthSelect.value = new Date().getMonth();
+    yearSelect.value = new Date().getFullYear();
+
+    monthSelect.addEventListener('change', () => createCalendar(parseInt(yearSelect.value), parseInt(monthSelect.value)));
+    yearSelect.addEventListener('change', () => createCalendar(parseInt(yearSelect.value), parseInt(monthSelect.value)));
+
+    createCalendar(currentYear, new Date().getMonth());
+    loadEntries();
+</script>
+
+</body>
+</html>
