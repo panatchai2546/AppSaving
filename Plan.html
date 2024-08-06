@@ -96,13 +96,13 @@
             margin-top: 20px;
         }
 
-        .expense-tracker table {
+        .expense-tracker table, .total-table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 10px;
         }
 
-        .expense-tracker th, .expense-tracker td {
+        .expense-tracker th, .expense-tracker td, .total-table th, .total-table td {
             border: 1px solid #28a745;
             padding: 8px;
             text-align: center;
@@ -115,13 +115,13 @@
             border-radius: 5px;
         }
 
-        .expense-tracker button {
+        .expense-tracker button, .total-table button {
             background-color: #28a745;
             color: white;
             cursor: pointer;
         }
 
-        .expense-tracker button:hover {
+        .expense-tracker button:hover, .total-table button:hover {
             background-color: #218838;
         }
 
@@ -135,11 +135,11 @@
     </style>
 </head>
 <body>
+    <div class="title">บันทึกวางแผนการเงิน</div>
     <div class="container">
         <div class="header">
-            <img src="Plan.jpg" alt="Money Image">
+            <img src="Money.jpg" alt="Money Image">
         </div>
-        <div class="title">บันทึกวางแผนการเงิน</div>
         <div class="calendar-container">
             <div class="calendar-header">
                 <button id="prevMonth">❮</button>
@@ -181,9 +181,23 @@
                         <th>คำอธิบาย</th>
                         <th>รายรับ</th>
                         <th>รายจ่าย</th>
+                        <th>ลบ</th>
                     </tr>
                 </thead>
                 <tbody id="transactionBody"></tbody>
+            </table>
+        </div>
+        <div class="total-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>คำอธิบาย</th>
+                        <th>รายรับ</th>
+                        <th>รายจ่าย</th>
+                        <th>คงเหลือ</th>
+                    </tr>
+                </thead>
+                <tbody id="totalBody"></tbody>
             </table>
         </div>
     </div>
@@ -193,6 +207,7 @@
             const yearSelect = document.getElementById('yearSelect');
             const calendarBody = document.getElementById('calendarBody');
             const transactionBody = document.getElementById('transactionBody');
+            const totalBody = document.getElementById('totalBody');
 
             const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
             const currentYear = new Date().getFullYear();
@@ -233,7 +248,7 @@
                     }
                     let cell = document.createElement('td');
                     cell.id = `day-${year}-${month}-${i}`;
-                    cell.innerHTML = `<div>${i}</div><div id="note-${year}-${month}-${i}" class="note" contenteditable="true"></div>`;
+                    cell.innerHTML = `<div>${i}</div><div id="note-${year}-${month}-${i}" class="note" contenteditable="true" oninput="saveNotes(${year}, ${month}, ${i})"></div>`;
                     row.appendChild(cell);
                 }
                 calendarBody.appendChild(row);
@@ -241,11 +256,13 @@
 
             monthSelect.addEventListener('change', () => {
                 generateCalendar(monthSelect.value, yearSelect.value);
+                loadNotes();
                 loadTransactions();
             });
 
             yearSelect.addEventListener('change', () => {
                 generateCalendar(monthSelect.value, yearSelect.value);
+                loadNotes();
                 loadTransactions();
             });
 
@@ -261,6 +278,7 @@
                 monthSelect.value = month;
                 yearSelect.value = year;
                 generateCalendar(month, year);
+                loadNotes();
                 loadTransactions();
             });
 
@@ -276,6 +294,7 @@
                 monthSelect.value = month;
                 yearSelect.value = year;
                 generateCalendar(month, year);
+                loadNotes();
                 loadTransactions();
             });
 
@@ -288,36 +307,45 @@
                     const date = prompt("กรุณาใส่วันที่ (dd-mm-yyyy):");
                     if (date) {
                         const [day, month, year] = date.split('-').map(Number);
-                        const noteId = `note-${year}-${month - 1}-${day}`;
-                        const noteElement = document.getElementById(noteId);
-                        if (noteElement) {
-                            const transaction = document.createElement('div');
-                            transaction.textContent = `${description}: ${type === 'income' ? '+' : '-'}${amount}`;
-                            noteElement.appendChild(transaction);
+                        if (day && month && year) {
+                            const noteId = `note-${year}-${month - 1}-${day}`;
+                            const noteElement = document.getElementById(noteId);
+                            if (noteElement) {
+                                const transaction = document.createElement('div');
+                                transaction.textContent = `${description}: ${type === 'income' ? '+' : '-'}${amount}`;
+                                noteElement.appendChild(transaction);
 
-                            const row = document.createElement('tr');
-                            row.innerHTML = `<td>${date}</td><td class="editable" contenteditable="true">${description}</td><td class="editable" contenteditable="true">${type === 'income' ? amount : ''}</td><td class="editable" contenteditable="true">${type === 'expense' ? amount : ''}</td>`;
-                            transactionBody.appendChild(row);
+                                const row = document.createElement('tr');
+                                row.innerHTML = `<td>${date}</td><td class="editable" contenteditable="true">${description}</td><td class="editable" contenteditable="true">${type === 'income' ? amount : ''}</td><td class="editable" contenteditable="true">${type === 'expense' ? amount : ''}</td><td><button onclick="deleteTransaction(this)">ลบ</button></td>`;
+                                transactionBody.appendChild(row);
 
-                            saveTransaction({ date, description, amount, type });
+                                updateTotalTable();
+
+                                saveTransaction({ date, description, amount, type });
+                            } else {
+                                alert("วันที่ไม่ถูกต้อง");
+                            }
+                        } else {
+                            alert("กรุณากรอกวันที่ให้ถูกต้อง (dd-mm-yyyy)");
                         }
                     }
+                } else {
+                    alert("กรุณากรอกคำอธิบายและจำนวนเงิน");
                 }
             }
 
             function deleteTransaction(button) {
                 const row = button.parentNode.parentNode;
                 const date = row.cells[0].textContent;
-                const [day, month, year] = date.split('-').map(Number);
-                const noteId = `note-${year}-${month - 1}-${day}`;
-                const noteElement = document.getElementById(noteId);
-                if (noteElement) {
-                    while (noteElement.firstChild) {
-                        noteElement.removeChild(noteElement.firstChild);
-                    }
-                }
                 row.remove();
-                removeTransaction(date);
+                removeTransactionFromStorage(date);
+                updateTotalTable();
+            }
+
+            function removeTransactionFromStorage(date) {
+                let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+                transactions = transactions.filter(transaction => transaction.date !== date);
+                localStorage.setItem('transactions', JSON.stringify(transactions));
             }
 
             function saveTransaction(transaction) {
@@ -326,14 +354,9 @@
                 localStorage.setItem('transactions', JSON.stringify(transactions));
             }
 
-            function removeTransaction(date) {
-                let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
-                transactions = transactions.filter(transaction => transaction.date !== date);
-                localStorage.setItem('transactions', JSON.stringify(transactions));
-            }
-
             function loadTransactions() {
                 let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+                transactionBody.innerHTML = '';
                 transactions.forEach(({ date, description, amount, type }) => {
                     const [day, month, year] = date.split('-').map(Number);
                     const noteId = `note-${year}-${month - 1}-${day}`;
@@ -344,14 +367,54 @@
                         noteElement.appendChild(transaction);
 
                         const row = document.createElement('tr');
-                        row.innerHTML = `<td>${date}</td><td class="editable" contenteditable="true">${description}</td><td class="editable" contenteditable="true">${type === 'income' ? amount : ''}</td><td class="editable" contenteditable="true">${type === 'expense' ? amount : ''}</td>`;
+                        row.innerHTML = `<td>${date}</td><td class="editable" contenteditable="true">${description}</td><td class="editable" contenteditable="true">${type === 'income' ? amount : ''}</td><td class="editable" contenteditable="true">${type === 'expense' ? amount : ''}</td><td><button onclick="deleteTransaction(this)">ลบ</button></td>`;
                         transactionBody.appendChild(row);
                     }
                 });
+                updateTotalTable();
+            }
+
+            function saveNotes(year, month, day) {
+                const noteId = `note-${year}-${month}-${day}`;
+                const noteElement = document.getElementById(noteId);
+                const notes = noteElement.textContent;
+                let savedNotes = JSON.parse(localStorage.getItem('notes')) || {};
+                savedNotes[noteId] = notes;
+                localStorage.setItem('notes', JSON.stringify(savedNotes));
+            }
+
+            function loadNotes() {
+                const savedNotes = JSON.parse(localStorage.getItem('notes')) || {};
+                for (let noteId in savedNotes) {
+                    const noteElement = document.getElementById(noteId);
+                    if (noteElement) {
+                        noteElement.textContent = savedNotes[noteId];
+                    }
+                }
+            }
+
+            function updateTotalTable() {
+                let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+                let totalIncome = 0;
+                let totalExpense = 0;
+                let totalBalance = 0;
+
+                transactions.forEach(({ description, amount, type }) => {
+                    if (type === 'income') {
+                        totalIncome += parseFloat(amount);
+                    } else if (type === 'expense') {
+                        totalExpense += parseFloat(amount);
+                    }
+                });
+
+                totalBalance = totalIncome - totalExpense;
+
+                totalBody.innerHTML = `<tr><td>รวม</td><td>${totalIncome.toFixed(2)}</td><td>${totalExpense.toFixed(2)}</td><td>${totalBalance.toFixed(2)}</td></tr>`;
             }
 
             generateCalendar(currentMonth, currentYear);
             loadTransactions();
+            loadNotes();
         });
     </script>
 </body>
