@@ -15,35 +15,53 @@
             align-items: center;
             height: 100vh;
             flex-direction: column;
+            box-sizing: border-box;
         }
         .header {
             text-align: center;
             margin-bottom: 20px;
             width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            box-sizing: border-box;
         }
         .header h1 {
             margin: 0;
+            font-size: 24px;
+            color: #4CAF50;
         }
         .header img {
             max-width: 100%;
             height: auto;
         }
         .container {
-            max-width: 600px;
+            width: 100%;
+            max-width: 800px;
             margin: 0 auto;
             padding: 20px;
             border: 1px solid #ccc;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            box-sizing: border-box;
         }
         .calendar {
             border-radius: 8px;
-            background-color: #4CAF50; /* Green color for the calendar */
-            color: white; /* Text color for contrast */
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background-color: #4CAF50;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             padding: 10px;
             margin-bottom: 20px;
             width: 100%;
+            box-sizing: border-box;
+            overflow-x: auto;
+        }
+        .calendar th, .calendar td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
         }
         .calendar th {
             background-color: #4CAF50;
@@ -56,11 +74,12 @@
         .expenses {
             border-radius: 8px;
             background-color: white;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             padding: 10px;
             width: 100%;
             max-height: 500px;
             overflow-y: auto;
+            box-sizing: border-box;
         }
         table {
             border-collapse: collapse;
@@ -139,34 +158,67 @@
             text-align: center;
             display: flex;
             justify-content: center;
-            gap: 10px; /* Adds space between the selectors */
+            gap: 10px;
         }
-        .container {
-            position: relative;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
         .back-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
+            position: relative;
             display: inline-block;
         }
-
         .back-img {
-            width: 40px; /* Adjust the width as needed */
+            width: 40px;
             height: auto;
         }
         .plan-img {
             display: block;
-            margin: 0 auto;
+            margin: 20px auto;
             max-width: 100%;
             height: auto;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 20px;
+            }
+            .calendar th, .calendar td {
+                padding: 5px;
+            }
+            .expenses {
+                padding: 5px;
+            }
+            th, td {
+                padding: 5px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 18px;
+            }
+            .header img {
+                width: 30px;
+            }
+            .calendar th, .calendar td {
+                padding: 3px;
+            }
+            .expenses {
+                padding: 3px;
+            }
+            th, td {
+                padding: 3px;
+            }
+            .controls {
+                flex-direction: column;
+                gap: 5px;
+            }
+            .add-entry {
+                width: 100%;
+                padding: 0;
+            }
+            .add-entry input, .add-entry select, .add-entry button {
+                width: calc(100% - 6px);
+                margin: 3px 0;
+            }
         }
     </style>
 </head>
@@ -176,11 +228,11 @@
     <a href="https://panatchai2546.github.io/AppSaving/Home.html" class="back-btn">
         <img src="back_home.png" alt="ย้อนกลับ" class="back-img">
     </a>
-    <h1>บันทึกการวางแผนการเงิน</h1>
-    <img src="Plan.jpg" alt="Financial Plan" class="plan-img">
+    <!-- <h1>บันทึกการวางแผนการเงิน</h1> -->
 </div>
-
 <div class="container">
+    <!-- <h1>บันทึกการวางแผนการเงิน</h1> -->
+    <!-- <img src="Plan.jpg" alt="Financial Plan" class="plan-img"> -->
     <div class="controls">
         <select id="month" class="dropdown">
             <!-- Months will be added here by JavaScript -->
@@ -244,7 +296,7 @@
         });
         calendarTable.appendChild(headerRow);
 
-        // Create calendar body
+        // Create days
         let row = document.createElement('tr');
         for (let i = 0; i < firstDay; i++) {
             const cell = document.createElement('td');
@@ -254,18 +306,18 @@
         for (let day = 1; day <= daysInMonth; day++) {
             const cell = document.createElement('td');
             const dateNumber = document.createElement('span');
-            dateNumber.className = 'date-number';
             dateNumber.textContent = day;
-            const note = document.createElement('input');
-            note.type = 'text';
-            note.className = 'input-note';
-            note.placeholder = "โน้ต";
-            note.value = storedNotes[`${year}-${month + 1}-${day}`] || '';
-            note.onchange = function () {
-                storedNotes[`${year}-${month + 1}-${day}`] = note.value;
-                localStorage.setItem('notes', JSON.stringify(storedNotes));
-            };
+            dateNumber.classList.add('date-number');
             cell.appendChild(dateNumber);
+
+            const note = document.createElement('textarea');
+            note.classList.add('input-note');
+            const noteKey = `${year}-${month + 1}-${day}`;
+            note.value = storedNotes[noteKey] || '';
+            note.addEventListener('input', () => {
+                storedNotes[noteKey] = note.value;
+                localStorage.setItem('notes', JSON.stringify(storedNotes));
+            });
             cell.appendChild(note);
             row.appendChild(cell);
 
@@ -273,6 +325,11 @@
                 calendarTable.appendChild(row);
                 row = document.createElement('tr');
             }
+        }
+
+        while (row.children.length < 7) {
+            const cell = document.createElement('td');
+            row.appendChild(cell);
         }
 
         calendarTable.appendChild(row);
@@ -283,7 +340,7 @@
         const entryDescription = document.getElementById('entryDescription').value;
         const entryAmount = parseFloat(document.getElementById('entryAmount').value);
 
-        if (entryDescription && entryAmount) {
+        if (entryDescription && !isNaN(entryAmount)) {
             const newRow = document.createElement('tr');
             const descriptionCell = document.createElement('td');
             descriptionCell.textContent = entryDescription;
@@ -306,12 +363,12 @@
             newRow.appendChild(expenseCell);
 
             const balanceCell = document.createElement('td');
-            balanceCell.textContent = totalBalance;
+            balanceCell.textContent = totalBalance.toFixed(2); // Ensure 2 decimal places
             newRow.appendChild(balanceCell);
 
             expensesTable.appendChild(newRow);
 
-            document.getElementById('totalBalance').textContent = totalBalance;
+            document.getElementById('totalBalance').textContent = totalBalance.toFixed(2);
 
             // Save to local storage
             const entries = JSON.parse(localStorage.getItem('entries')) || [];
@@ -353,7 +410,7 @@
             newRow.appendChild(expenseCell);
 
             const balanceCell = document.createElement('td');
-            balanceCell.textContent = entry.balance;
+            balanceCell.textContent = entry.balance.toFixed(2); // Ensure 2 decimal places
             newRow.appendChild(balanceCell);
 
             expensesTable.appendChild(newRow);
@@ -361,7 +418,7 @@
 
         if (entries.length > 0) {
             totalBalance = entries[entries.length - 1].balance;
-            document.getElementById('totalBalance').textContent = totalBalance;
+            document.getElementById('totalBalance').textContent = totalBalance.toFixed(2);
         }
     }
 
