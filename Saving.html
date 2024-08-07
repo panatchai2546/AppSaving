@@ -80,7 +80,18 @@
             color: red;
             text-align: center;
         }
-                .container {
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .delete-btn:hover {
+            opacity: 0.8;
+        }
+                        .container {
             position: relative;
             max-width: 600px;
             margin: 0 auto;
@@ -117,15 +128,15 @@
 </head>
 <body>
     <div class="header">
-        <a href="https://panatchai2546.github.io/AppSaving/Home.html" class="back-btn">
+<!--         <a href="https://panatchai2546.github.io/AppSaving/HomeIce.html" class="back-btn">
             <img src="back_home.png" alt="ย้อนกลับ" class="back-img">
-        </a>
+        </a> -->
     </div>
     <div class="container">
-        <h1>บันทึกการเก็บเงิน</h1>
-        <a href="https://panatchai2546.github.io/AppSaving/Home.html" class="back-btn">
+        <a href="https://panatchai2546.github.io/AppSaving/HomeIce.html" class="back-btn">
             <img src="back_home.png" alt="ย้อนกลับ" class="back-img">
         </a>
+        <h1>บันทึกการเก็บเงิน</h1>
         <img src="Money.jpg" alt="Money" class="money-img">
         <p></p>
         <form id="savingsForm">
@@ -147,6 +158,7 @@
                         <th>คำอธิบาย</th>
                         <th>จำนวนเงิน</th>
                         <th>รายการ</th>
+                        <th>ลบ</th>
                     </tr>
                 </thead>
                 <tbody id="transactionList">
@@ -245,6 +257,20 @@
             renderCategories();
         }
 
+        function deleteTransaction(index) {
+            const transactions = getTransactions();
+            const transactionToDelete = transactions[index];
+
+            // Update categories and total amount
+            updateCategory(transactionToDelete.description, transactionToDelete.type === 'การฝาก' ? -transactionToDelete.amount : transactionToDelete.amount);
+
+            transactions.splice(index, 1);
+            saveTransactions(transactions);
+
+            renderTransactions();
+            renderCategories();
+        }
+
         function getTransactions() {
             const transactions = localStorage.getItem('transactions');
             return transactions ? JSON.parse(transactions) : [];
@@ -283,7 +309,7 @@
             const transactionList = document.getElementById('transactionList');
             transactionList.innerHTML = '';
             const transactions = getTransactions();
-            transactions.forEach(transaction => {
+            transactions.forEach((transaction, index) => {
                 const row = document.createElement('tr');
 
                 const dateCell = document.createElement('td');
@@ -301,6 +327,14 @@
                 const typeCell = document.createElement('td');
                 typeCell.textContent = transaction.type;
                 row.appendChild(typeCell);
+
+                const deleteCell = document.createElement('td');
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'ลบ';
+                deleteBtn.classList.add('delete-btn');
+                deleteBtn.onclick = () => deleteTransaction(index);
+                deleteCell.appendChild(deleteBtn);
+                row.appendChild(deleteCell);
 
                 transactionList.appendChild(row);
             });
