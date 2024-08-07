@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>บันทึกการวางแผนการเงิน</title>
     <style>
+        /* Add your CSS styles here */
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f0f0;
@@ -132,10 +133,10 @@
             width: 100%;
             text-align: center;
         }
-        .controls h2 {
+        .controls h1 {
             margin: 10px 0;
             font-size: 18px;
-            color: #4CAF50;
+            color: #000000;
         }
         .calendar {
             display: grid;
@@ -220,14 +221,12 @@
 </head>
 <body>
 
-<div class="header">
-    <a href="https://panatchai2546.github.io/AppSaving/Home.html" class="back-btn">
-        <img src="back_home.png" alt="ย้อนกลับ" class="back-img">
-    </a>
-</div>
 <div class="container">
     <div class="controls">
-        <h2>การบันทึกการวางแผนการเงิน</h2>
+        <a href="https://panatchai2546.github.io/AppSaving/HomeIce.html" class="back-btn">
+            <img src="back_home.png" alt="ย้อนกลับ" class="back-img">
+        </a>
+        <h1>การบันทึกการวางแผนการเงิน</h1>
         <img src="Plan.jpg" alt="Plan" class="plan-img">
         <select id="month" class="dropdown">
             <!-- Months will be added here by JavaScript -->
@@ -250,13 +249,14 @@
     </div>
 
     <div class="expenses">
-        <h2>ตารางรายรับ - รายจ่าย</h2>
+        <h2>รายรับ - รายจ่าย</h2>
         <table id="expensesTable">
             <tr>
                 <th>รายการ</th>
                 <th>รายรับ</th>
                 <th>รายจ่าย</th>
                 <th class="total-balance">คงเหลือ</th>
+                <th>ลบ</th>
             </tr>
         </table>
         <div class="balance">
@@ -280,168 +280,137 @@
 
             const incomeCell = document.createElement('td');
             const expenseCell = document.createElement('td');
+            const balanceCell = document.createElement('td');
+            const deleteCell = document.createElement('td');
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'ลบ';
+            deleteButton.onclick = function() {
+                deleteEntry(newRow);
+            };
+            deleteCell.appendChild(deleteButton);
 
             if (entryType === 'income') {
-                incomeCell.textContent = entryAmount;
-                expenseCell.textContent = '';
-                totalBalance += entryAmount;
+                incomeCell.textContent = entryAmount.toFixed(2);
+                expenseCell.textContent = '-';
             } else {
-                incomeCell.textContent = '';
-                expenseCell.textContent = entryAmount;
-                totalBalance -= entryAmount;
+                incomeCell.textContent = '-';
+                expenseCell.textContent = entryAmount.toFixed(2);
             }
 
             newRow.appendChild(incomeCell);
             newRow.appendChild(expenseCell);
-
-            const balanceCell = document.createElement('td');
-            balanceCell.textContent = totalBalance.toFixed(2); // Ensure 2 decimal places
             newRow.appendChild(balanceCell);
+            newRow.appendChild(deleteCell);
 
-            expensesTable.appendChild(newRow);
+            document.getElementById('expensesTable').appendChild(newRow);
 
-            // Save entries to local storage
-            const currentMonth = monthSelect.value;
-            const currentYear = yearSelect.value;
-            const entries = JSON.parse(localStorage.getItem(`${currentYear}-${currentMonth}`)) || [];
-            entries.push({
-                type: entryType,
-                description: entryDescription,
-                amount: entryAmount,
-                balance: totalBalance
-            });
-            localStorage.setItem(`${currentYear}-${currentMonth}`, JSON.stringify(entries));
-
-            // Clear input fields
+            updateBalance();
             document.getElementById('entryDescription').value = '';
             document.getElementById('entryAmount').value = '';
-            document.getElementById('entryType').value = 'income';
         }
     }
 
-    // Load entries from local storage
-    function loadEntries() {
-        const currentMonth = monthSelect.value;
-        const currentYear = yearSelect.value;
-        const entries = JSON.parse(localStorage.getItem(`${currentYear}-${currentMonth}`)) || [];
-        expensesTable.innerHTML = `
-            <tr>
-                <th>รายการ</th>
-                <th>รายรับ</th>
-                <th>รายจ่าย</th>
-                <th class="total-balance">คงเหลือ</th>
-            </tr>
-        `; // Clear the table and add the header row
+    function deleteEntry(row) {
+        row.remove();
+        updateBalance();
+    }
 
-        totalBalance = 0;
-        entries.forEach(entry => {
-            const newRow = document.createElement('tr');
-            const descriptionCell = document.createElement('td');
-            descriptionCell.textContent = entry.description;
-            newRow.appendChild(descriptionCell);
+    function updateBalance() {
+        const rows = document.querySelectorAll('#expensesTable tr');
+        let totalBalance = 0;
 
-            const incomeCell = document.createElement('td');
-            const expenseCell = document.createElement('td');
+        rows.forEach((row, index) => {
+            if (index > 0) { // Skip the header row
+                const incomeCell = row.cells[1].textContent;
+                const expenseCell = row.cells[2].textContent;
+                let balance = 0;
 
-            if (entry.type === 'income') {
-                incomeCell.textContent = entry.amount;
-                expenseCell.textContent = '';
-            } else {
-                incomeCell.textContent = '';
-                expenseCell.textContent = entry.amount;
+                if (incomeCell !== '-') {
+                    balance = parseFloat(incomeCell);
+                } else if (expenseCell !== '-') {
+                    balance = -parseFloat(expenseCell);
+                }
+
+                totalBalance += balance;
+                row.cells[3].textContent = totalBalance.toFixed(2);
             }
-
-            newRow.appendChild(incomeCell);
-            newRow.appendChild(expenseCell);
-
-            const balanceCell = document.createElement('td');
-            balanceCell.textContent = entry.balance.toFixed(2); // Ensure 2 decimal places
-            newRow.appendChild(balanceCell);
-
-            expensesTable.appendChild(newRow);
-
-            totalBalance = entry.balance; // Update the total balance with the latest balance
         });
 
         document.getElementById('totalBalance').textContent = totalBalance.toFixed(2);
     }
 
-    // Generate calendar
-    function generateCalendar(month, year) {
+    // JavaScript code to handle calendar
+    document.addEventListener('DOMContentLoaded', function() {
+        const monthSelect = document.getElementById('month');
+        const yearSelect = document.getElementById('year');
         const calendar = document.getElementById('calendar');
-        calendar.innerHTML = ''; // Clear the calendar
-
-        // Add day headers
-        const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        daysOfWeek.forEach(day => {
-            const dayHeader = document.createElement('div');
-            dayHeader.classList.add('day-header');
-            dayHeader.textContent = day;
-            calendar.appendChild(dayHeader);
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        
+        // Populate month and year dropdowns
+        const months = [
+            'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 
+            'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+        ];
+        
+        months.forEach((month, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = month;
+            monthSelect.appendChild(option);
         });
-
-        // Get the first day of the month
-        const firstDay = new Date(year, month).getDay();
-
-        // Get the number of days in the month
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-        // Fill in the blanks before the first day of the month
-        for (let i = 0; i < firstDay; i++) {
-            const blank = document.createElement('div');
-            calendar.appendChild(blank);
+        
+        for (let i = currentYear - 10; i <= currentYear + 10; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            yearSelect.appendChild(option);
         }
-
-        // Add the days of the month
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dayCell = document.createElement('div');
-            dayCell.textContent = day;
-
-            // Highlight the current day
-            const today = new Date();
-            if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                dayCell.classList.add('today');
+        
+        monthSelect.value = currentMonth;
+        yearSelect.value = currentYear;
+        
+        function generateCalendar(month, year) {
+            calendar.innerHTML = '';
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const dayHeaders = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+            
+            dayHeaders.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'day-header';
+                dayHeader.textContent = day;
+                calendar.appendChild(dayHeader);
+            });
+            
+            for (let i = 0; i < firstDay; i++) {
+                const emptyCell = document.createElement('div');
+                calendar.appendChild(emptyCell);
             }
-
-            calendar.appendChild(dayCell);
+            
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayCell = document.createElement('div');
+                dayCell.textContent = i;
+                
+                if (i === today.getDate() && month === currentMonth && year === currentYear) {
+                    dayCell.className = 'today';
+                }
+                
+                calendar.appendChild(dayCell);
+            }
         }
-    }
-
-    const monthSelect = document.getElementById('month');
-    const yearSelect = document.getElementById('year');
-    const expensesTable = document.getElementById('expensesTable');
-    let totalBalance = 0;
-
-    for (let i = 0; i < 12; i++) {
-        const option = document.createElement('option');
-        option.value = i;
-        option.textContent = new Date(0, i).toLocaleString('default', { month: 'long' });
-        monthSelect.appendChild(option);
-    }
-
-    const currentYear = new Date().getFullYear();
-    for (let i = currentYear - 5; i <= currentYear + 5; i++) {
-        const option = document.createElement('option');
-        option.value = i;
-        option.textContent = i;
-        yearSelect.appendChild(option);
-    }
-
-    monthSelect.value = new Date().getMonth();
-    yearSelect.value = new Date().getFullYear();
-
-    monthSelect.addEventListener('change', () => {
-        generateCalendar(parseInt(monthSelect.value), parseInt(yearSelect.value));
-        loadEntries();
+        
+        monthSelect.addEventListener('change', function() {
+            generateCalendar(parseInt(monthSelect.value), parseInt(yearSelect.value));
+        });
+        
+        yearSelect.addEventListener('change', function() {
+            generateCalendar(parseInt(monthSelect.value), parseInt(yearSelect.value));
+        });
+        
+        generateCalendar(currentMonth, currentYear);
     });
-    yearSelect.addEventListener('change', () => {
-        generateCalendar(parseInt(monthSelect.value), parseInt(yearSelect.value));
-        loadEntries();
-    });
-
-    generateCalendar(new Date().getMonth(), new Date().getFullYear());
-    loadEntries();
 </script>
-
 </body>
 </html>
