@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>บันทึกการวางแผนการเงิน</title>
     <style>
-        /* Add your CSS styles here */
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f0f0;
@@ -27,7 +26,7 @@
             align-items: center;
             padding: 0 20px;
             box-sizing: border-box;
-            position: relative; /* Add this to allow positioning of the back button */
+            position: relative;
         }
         .header h1 {
             margin: 0;
@@ -49,8 +48,8 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             background-color: #fff;
             box-sizing: border-box;
-            overflow-y: auto; /* Allow vertical scrolling */
-            max-height: calc(100vh - 60px); /* Adjust max-height to fit within the viewport */
+            overflow-y: auto;
+            max-height: calc(100vh - 60px);
         }
         .expenses {
             border-radius: 8px;
@@ -144,30 +143,34 @@
             grid-template-columns: repeat(7, 1fr);
             gap: 5px;
             margin-bottom: 20px;
+            width: 100%;
+            box-sizing: border-box;
         }
         .day-header, .calendar div {
             background-color: #4CAF50;
             color: white;
-            padding: 10px;
+            padding: 8px;
             border-radius: 4px;
             text-align: center;
+            font-size: 14px;
         }
         .calendar div {
             border: 1px solid #4CAF50;
             background-color: #fff;
             color: black;
-            height: 50px; /* Ensure consistent height */
+            height: 50px; /* Adjust height as needed */
             line-height: 50px; /* Center text vertically */
+            box-sizing: border-box;
         }
         .calendar div.today {
             background-color: lightgreen;
             color: #4CAF50;
         }
         .back-btn {
-            position: absolute; /* Position it absolutely */
-            left: 0; /* Align it to the left */
-            top: 50%; /* Center it vertically */
-            transform: translateY(-50%); /* Adjust for perfect centering */
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
         }
         .back-img {
             width: 40px;
@@ -185,8 +188,13 @@
             .expenses {
                 padding: 5px;
             }
+            .calendar div {
+                height: 40px;
+                line-height: 40px;
+                font-size: 12px;
+            }
         }
-        
+
         @media (max-width: 480px) {
             .header h1 {
                 font-size: 18px;
@@ -211,6 +219,11 @@
             .add-entry input, .add-entry select, .add-entry button {
                 width: calc(100% - 6px);
                 margin: 3px 0;
+            }
+            .calendar div {
+                height: 30px;
+                line-height: 30px;
+                font-size: 10px;
             }
         }
         .plan-img {
@@ -282,136 +295,123 @@
             descriptionCell.textContent = entryDescription;
             newRow.appendChild(descriptionCell);
 
-            const incomeCell = document.createElement('td');
+            const amountCell = document.createElement('td');
+            amountCell.textContent = entryType === 'income' ? entryAmount.toFixed(2) : '';
+            newRow.appendChild(amountCell);
+
             const expenseCell = document.createElement('td');
-            const balanceCell = document.createElement('td');
-            const deleteCell = document.createElement('td');
-            deleteCell.innerHTML = '<button onclick="deleteEntry(this)">ลบ</button>';
-            balanceCell.className = 'total-balance';
-
-            if (entryType === 'income') {
-                incomeCell.textContent = entryAmount.toFixed(2);
-                expenseCell.textContent = '-';
-                balanceCell.textContent = entryAmount.toFixed(2);
-            } else {
-                incomeCell.textContent = '-';
-                expenseCell.textContent = entryAmount.toFixed(2);
-                balanceCell.textContent = (-entryAmount).toFixed(2);
-            }
-
-            newRow.appendChild(incomeCell);
+            expenseCell.textContent = entryType === 'expense' ? entryAmount.toFixed(2) : '';
             newRow.appendChild(expenseCell);
+
+            const balanceCell = document.createElement('td');
+            balanceCell.textContent = ''; // Calculated balance will be added here
             newRow.appendChild(balanceCell);
+
+            const deleteCell = document.createElement('td');
+            deleteCell.innerHTML = '<button onclick="deleteRow(this)">ลบ</button>';
             newRow.appendChild(deleteCell);
 
             document.getElementById('expensesTable').appendChild(newRow);
-            updateTotalBalance();
-        }
 
-        // Clear input fields
-        document.getElementById('entryDescription').value = '';
-        document.getElementById('entryAmount').value = '';
-        document.getElementById('entryType').value = 'income';
+            // Update total balance
+            updateTotalBalance();
+        } else {
+            alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+        }
     }
 
-    function deleteEntry(button) {
-        const row = button.parentElement.parentElement;
-        row.parentElement.removeChild(row);
+    function deleteRow(button) {
+        button.parentElement.parentElement.remove();
         updateTotalBalance();
     }
 
     function updateTotalBalance() {
         const rows = document.querySelectorAll('#expensesTable tr');
-        let totalBalance = 0;
+        let totalIncome = 0;
+        let totalExpense = 0;
 
-        rows.forEach((row, index) => {
-            if (index === 0) return; // Skip header row
+        rows.forEach(row => {
+            const incomeCell = row.cells[1];
+            const expenseCell = row.cells[2];
+            const income = parseFloat(incomeCell.textContent) || 0;
+            const expense = parseFloat(expenseCell.textContent) || 0;
 
-            const incomeCell = row.children[1].textContent;
-            const expenseCell = row.children[2].textContent;
-            const balanceCell = row.children[3];
-
-            const income = incomeCell !== '-' ? parseFloat(incomeCell) : 0;
-            const expense = expenseCell !== '-' ? parseFloat(expenseCell) : 0;
-            const balance = income - expense;
-
-            balanceCell.textContent = balance.toFixed(2);
-            totalBalance += balance;
+            totalIncome += income;
+            totalExpense += expense;
         });
 
+        const totalBalance = totalIncome - totalExpense;
         document.getElementById('totalBalance').textContent = totalBalance.toFixed(2);
     }
 
-    // JavaScript to generate calendar
-    function generateCalendar(year, month) {
-        const calendarElement = document.getElementById('calendar');
-        calendarElement.innerHTML = '';
+    // Initialize calendar
+    function initCalendar() {
+        const today = new Date();
+        const monthSelector = document.getElementById('month');
+        const yearSelector = document.getElementById('year');
 
-        const date = new Date(year, month - 1, 1);
-        const daysInMonth = new Date(year, month, 0).getDate();
-        const startDay = date.getDay();
+        for (let i = 0; i < 12; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = new Date(0, i).toLocaleString('default', { month: 'long' });
+            monthSelector.appendChild(option);
+        }
 
-        const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        for (let year = today.getFullYear() - 10; year <= today.getFullYear() + 10; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            yearSelector.appendChild(option);
+        }
+
+        monthSelector.value = today.getMonth();
+        yearSelector.value = today.getFullYear();
+        renderCalendar(today.getMonth(), today.getFullYear());
+    }
+
+    function renderCalendar(month, year) {
+        const calendar = document.getElementById('calendar');
+        calendar.innerHTML = '';
+
+        const date = new Date(year, month);
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const firstDay = new Date(year, month, 1).getDay();
+
+        // Create day headers
+        const daysOfWeek = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
         daysOfWeek.forEach(day => {
             const dayHeader = document.createElement('div');
             dayHeader.className = 'day-header';
             dayHeader.textContent = day;
-            calendarElement.appendChild(dayHeader);
+            calendar.appendChild(dayHeader);
         });
 
-        for (let i = 0; i < startDay; i++) {
+        // Add empty cells before the first day
+        for (let i = 0; i < firstDay; i++) {
             const emptyCell = document.createElement('div');
-            calendarElement.appendChild(emptyCell);
+            calendar.appendChild(emptyCell);
         }
 
+        // Add days of the month
         for (let i = 1; i <= daysInMonth; i++) {
             const dayCell = document.createElement('div');
             dayCell.textContent = i;
-            calendarElement.appendChild(dayCell);
-
-            const today = new Date();
-            if (year === today.getFullYear() && month === today.getMonth() + 1 && i === today.getDate()) {
-                dayCell.className = 'today';
+            if (i === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear()) {
+                dayCell.classList.add('today');
             }
+            calendar.appendChild(dayCell);
         }
     }
 
-    function populateYearMonthSelectors() {
-        const monthSelector = document.getElementById('month');
-        const yearSelector = document.getElementById('year');
+    document.getElementById('month').addEventListener('change', function() {
+        renderCalendar(this.value, document.getElementById('year').value);
+    });
 
-        const currentYear = new Date().getFullYear();
-        const currentMonth = new Date().getMonth() + 1;
+    document.getElementById('year').addEventListener('change', function() {
+        renderCalendar(document.getElementById('month').value, this.value);
+    });
 
-        for (let i = 1; i <= 12; i++) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = `เดือน ${i}`;
-            monthSelector.appendChild(option);
-        }
-
-        for (let i = currentYear - 5; i <= currentYear + 5; i++) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = `ปี ${i}`;
-            yearSelector.appendChild(option);
-        }
-
-        monthSelector.value = currentMonth;
-        yearSelector.value = currentYear;
-
-        monthSelector.addEventListener('change', () => {
-            generateCalendar(parseInt(yearSelector.value), parseInt(monthSelector.value));
-        });
-
-        yearSelector.addEventListener('change', () => {
-            generateCalendar(parseInt(yearSelector.value), parseInt(monthSelector.value));
-        });
-
-        generateCalendar(currentYear, currentMonth);
-    }
-
-    window.onload = populateYearMonthSelectors;
+    initCalendar();
 </script>
 
 </body>
