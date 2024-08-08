@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>บันทึกการวางแผนการเงิน</title>
     <style>
+        /* Existing styles remain unchanged */
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f0f0;
@@ -118,10 +119,6 @@
             display: inline-block;
             min-width: 100px;
         }
-        .total-balance {
-            text-align: right;
-            padding-right: 8px;
-        }
         .dropdown {
             padding: 8px;
             margin: 5px;
@@ -167,6 +164,9 @@
         .calendar div.today {
             background-color: lightgreen;
             color: #4CAF50;
+        }
+        .calendar div.holiday {
+            color: red;
         }
         .back-btn {
             position: absolute;
@@ -274,7 +274,6 @@
                 <th>รายการ</th>
                 <th>รายรับ</th>
                 <th>รายจ่าย</th>
-               <!-- <th class="total-balance">คงเหลือ</th> -->
                 <th>ลบ</th>
             </tr>
         </table>
@@ -288,142 +287,139 @@
     const ENTRY_STORAGE_KEY = 'financial_entries';
 
     function addEntry() {
-        const entryType = document.getElementById('entryType').value;
-        const entryDescription = document.getElementById('entryDescription').value;
-        const entryAmount = parseFloat(document.getElementById('entryAmount').value);
-        const selectedMonth = document.getElementById('month').value;
-        const selectedYear = document.getElementById('year').value;
+    const entryType = document.getElementById('entryType').value;
+    const entryDescription = document.getElementById('entryDescription').value;
+    const entryAmount = parseFloat(document.getElementById('entryAmount').value);
+    const selectedMonth = document.getElementById('month').value;
+    const selectedYear = document.getElementById('year').value;
 
-        if (entryDescription && !isNaN(entryAmount)) {
-            const newEntry = {
-                type: entryType,
-                description: entryDescription,
-                amount: entryAmount,
-                month: selectedMonth,
-                year: selectedYear
-            };
-
-            const entries = getStoredEntries();
-            entries.push(newEntry);
-            localStorage.setItem(ENTRY_STORAGE_KEY, JSON.stringify(entries));
-
-            addEntryToTable(newEntry);
-            updateTotalBalance();
-        } else {
-            alert('กรุณากรอกข้อมูลให้ครบถ้วน');
-        }
+    if (!entryDescription || isNaN(entryAmount)) {
+        alert('กรุณากรอกรายละเอียดและจำนวนเงินให้ถูกต้อง');
+        return;
     }
 
-    function getStoredEntries() {
-        const entries = localStorage.getItem(ENTRY_STORAGE_KEY);
-        return entries ? JSON.parse(entries) : [];
-    }
+    const entry = {
+        description: entryDescription,
+        amount: entryAmount,
+        type: entryType,
+        date: new Date().toISOString(),
+        month: selectedMonth,
+        year: selectedYear
+    };
 
-    function addEntryToTable(entry) {
-        const newRow = document.createElement('tr');
-        const descriptionCell = document.createElement('td');
-        descriptionCell.textContent = entry.description;
-        newRow.appendChild(descriptionCell);
+    let entries = JSON.parse(localStorage.getItem(ENTRY_STORAGE_KEY)) || [];
+    entries.push(entry);
+    localStorage.setItem(ENTRY_STORAGE_KEY, JSON.stringify(entries));
 
-        const amountCell = document.createElement('td');
-        amountCell.textContent = entry.type === 'income' ? entry.amount.toFixed(2) : '';
-        newRow.appendChild(amountCell);
+    loadEntries();
 
-        const expenseCell = document.createElement('td');
-        expenseCell.textContent = entry.type === 'expense' ? entry.amount.toFixed(2) : '';
-        newRow.appendChild(expenseCell);
-
-        const balanceCell = document.createElement('td');
-        balanceCell.textContent = ''; // Calculated balance will be added here
-        newRow.appendChild(balanceCell);
-
-        const deleteCell = document.createElement('td');
-        deleteCell.innerHTML = '<button onclick="deleteRow(this)">ลบ</button>';
-        newRow.appendChild(deleteCell);
-
-        document.getElementById('expensesTable').appendChild(newRow);
-    }
-
-    function deleteRow(button) {
-        const row = button.parentElement.parentElement;
-        const description = row.cells[0].textContent;
-        const amount = parseFloat(row.cells[1].textContent || row.cells[2].textContent);
-        const type = row.cells[1].textContent ? 'income' : 'expense';
-        const selectedMonth = document.getElementById('month').value;
-        const selectedYear = document.getElementById('year').value;
-
-        const entries = getStoredEntries();
-        const entryIndex = entries.findIndex(entry => entry.description === description && entry.amount === amount && entry.type === type && entry.month === selectedMonth && entry.year === selectedYear);
-
-        if (entryIndex !== -1) {
-            entries.splice(entryIndex, 1);
-            localStorage.setItem(ENTRY_STORAGE_KEY, JSON.stringify(entries));
-        }
-
-        row.remove();
-        updateTotalBalance();
-    }
-
-    function updateTotalBalance() {
-        const rows = document.querySelectorAll('#expensesTable tr');
-        let totalIncome = 0;
-        let totalExpense = 0;
-
-        rows.forEach(row => {
-            const incomeCell = row.cells[1];
-            const expenseCell = row.cells[2];
-            const income = parseFloat(incomeCell.textContent) || 0;
-            const expense = parseFloat(expenseCell.textContent) || 0;
-
-            totalIncome += income;
-            totalExpense += expense;
-        });
-
-        const totalBalance = totalIncome - totalExpense;
-        document.getElementById('totalBalance').textContent = totalBalance.toFixed(2);
+    // Reset form
+    document.getElementById('entryDescription').value = '';
+    document.getElementById('entryAmount').value = '';
+    document.getElementById('entryType').value = 'income';
     }
 
     function loadEntries() {
-        const entries = getStoredEntries();
-        const selectedMonth = document.getElementById('month').value;
-        const selectedYear = document.getElementById('year').value;
+    const table = document.getElementById('expensesTable');
+    const balanceSpan = document.getElementById('totalBalance');
+    const selectedMonth = document.getElementById('month').value;
+    const selectedYear = document.getElementById('year').value;
+    
+    table.innerHTML = `
+        <tr>
+            <th>รายการ</th>
+            <th>รายรับ</th>
+            <th>รายจ่าย</th>
+            <th>ลบ</th>
+        </tr>
+    `;
 
-        document.querySelectorAll('#expensesTable tr').forEach((row, index) => {
-            if (index !== 0) row.remove();
-        });
+    let totalBalance = 0;
+    let entries = JSON.parse(localStorage.getItem(ENTRY_STORAGE_KEY)) || [];
 
-        entries.forEach(entry => {
-            if (entry.month === selectedMonth && entry.year === selectedYear) {
-                addEntryToTable(entry);
-            }
-        });
+    entries = entries.filter(entry => entry.month === selectedMonth && entry.year === selectedYear);
 
-        updateTotalBalance();
+    entries.forEach((entry, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${entry.description}</td>
+            <td>${entry.type === 'income' ? entry.amount : ''}</td>
+            <td>${entry.type === 'expense' ? entry.amount : ''}</td>
+            <td><button onclick="deleteEntry(${index})">ลบ</button></td>
+        `;
+        table.appendChild(row);
+
+        if (entry.type === 'income') {
+            totalBalance += entry.amount;
+        } else {
+            totalBalance -= entry.amount;
+        }
+    });
+
+    balanceSpan.textContent = totalBalance.toLocaleString();
     }
 
-    // Initialize calendar
+    function deleteEntry(index) {
+    let entries = JSON.parse(localStorage.getItem(ENTRY_STORAGE_KEY)) || [];
+    const selectedMonth = document.getElementById('month').value;
+    const selectedYear = document.getElementById('year').value;
+
+    entries = entries.filter(entry => entry.month === selectedMonth && entry.year === selectedYear);
+
+    entries.splice(index, 1);
+    localStorage.setItem(ENTRY_STORAGE_KEY, JSON.stringify(entries));
+    loadEntries();
+    }
+
     function initCalendar() {
-        const today = new Date();
-        const monthSelector = document.getElementById('month');
-        const yearSelector = document.getElementById('year');
+        const monthSelect = document.getElementById('month');
+        const yearSelect = document.getElementById('year');
+        const now = new Date();
+        const currentYear = now.getFullYear();
 
-        for (let i = 0; i < 12; i++) {
+        // Populate month options
+        const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+        months.forEach((month, index) => {
             const option = document.createElement('option');
-            option.value = i;
-            option.textContent = new Date(0, i).toLocaleString('default', { month: 'long' });
-            monthSelector.appendChild(option);
-        }
+            option.value = index;
+            option.text = month;
+            monthSelect.appendChild(option);
+        });
 
-        for (let year = today.getFullYear() - 10; year <= today.getFullYear() + 10; year++) {
+        // Populate year options (5 years back and 5 years forward)
+        for (let year = currentYear - 5; year <= currentYear + 5; year++) {
             const option = document.createElement('option');
             option.value = year;
-            option.textContent = year;
-            yearSelector.appendChild(option);
+            option.text = year;
+            yearSelect.appendChild(option);
         }
 
-        monthSelector.value = today.getMonth();
-        yearSelector.value = today.getFullYear();
-        renderCalendar(today.getMonth(), today.getFullYear());
+        // Set current month and year as default
+        monthSelect.value = now.getMonth();
+        yearSelect.value = currentYear;
+
+        renderCalendar(now.getMonth(), currentYear);
+    }
+
+    const THAI_HOLIDAYS = {
+        2024: {
+            0: [1], // มกราคม: วันขึ้นปีใหม่ (1 ม.ค.)
+            2: [6], // มีนาคม: วันมาฆบูชา (6 มี.ค.)
+            3: [6, 13, 14, 15], // เมษายน: วันจักรี (6 เม.ย.), วันสงกรานต์ (13-15 เม.ย.)
+            4: [1, 4], // พฤษภาคม: วันแรงงานแห่งชาติ (1 พ.ค.), วันฉัตรมงคล (4 พ.ค.)
+            5: [3], // มิถุนายน: วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าฯ พระบรมราชินี (3 มิ.ย.)
+            7: [12], // สิงหาคม: วันแม่แห่งชาติ (12 ส.ค.)
+            9: [13, 23], // ตุลาคม: วันคล้ายวันสวรรคต ร.9 (13 ต.ค.), วันปิยมหาราช (23 ต.ค.)
+            11: [5, 10, 31], // ธันวาคม: วันพ่อแห่งชาติ (5 ธ.ค.), วันรัฐธรรมนูญ (10 ธ.ค.), วันสิ้นปี (31 ธ.ค.)
+        },
+        // เพิ่มข้อมูลวันหยุดของปีอื่น ๆ ตามความต้องการ
+    };
+
+    function isThaiHoliday(day, month, year) {
+        if (THAI_HOLIDAYS[year] && THAI_HOLIDAYS[year][month]) {
+            return THAI_HOLIDAYS[year][month].includes(day);
+        }
+        return false;
     }
 
     function renderCalendar(month, year) {
@@ -453,9 +449,17 @@
         for (let i = 1; i <= daysInMonth; i++) {
             const dayCell = document.createElement('div');
             dayCell.textContent = i;
+
+            // Highlight today's date
             if (i === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear()) {
                 dayCell.classList.add('today');
             }
+
+            // Change color to red if it's a Thai holiday
+            if (isThaiHoliday(i, month, year)) {
+                dayCell.style.color = 'red';
+            }
+
             calendar.appendChild(dayCell);
         }
     }
