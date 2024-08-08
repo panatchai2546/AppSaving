@@ -285,45 +285,82 @@
 </div>
 
 <script>
-    // JavaScript code to handle entries
+    const ENTRY_STORAGE_KEY = 'financial_entries';
+
     function addEntry() {
         const entryType = document.getElementById('entryType').value;
         const entryDescription = document.getElementById('entryDescription').value;
         const entryAmount = parseFloat(document.getElementById('entryAmount').value);
+        const selectedMonth = document.getElementById('month').value;
+        const selectedYear = document.getElementById('year').value;
 
         if (entryDescription && !isNaN(entryAmount)) {
-            const newRow = document.createElement('tr');
-            const descriptionCell = document.createElement('td');
-            descriptionCell.textContent = entryDescription;
-            newRow.appendChild(descriptionCell);
+            const newEntry = {
+                type: entryType,
+                description: entryDescription,
+                amount: entryAmount,
+                month: selectedMonth,
+                year: selectedYear
+            };
 
-            const amountCell = document.createElement('td');
-            amountCell.textContent = entryType === 'income' ? entryAmount.toFixed(2) : '';
-            newRow.appendChild(amountCell);
+            const entries = getStoredEntries();
+            entries.push(newEntry);
+            localStorage.setItem(ENTRY_STORAGE_KEY, JSON.stringify(entries));
 
-            const expenseCell = document.createElement('td');
-            expenseCell.textContent = entryType === 'expense' ? entryAmount.toFixed(2) : '';
-            newRow.appendChild(expenseCell);
-
-            const balanceCell = document.createElement('td');
-            balanceCell.textContent = ''; // Calculated balance will be added here
-            newRow.appendChild(balanceCell);
-
-            const deleteCell = document.createElement('td');
-            deleteCell.innerHTML = '<button onclick="deleteRow(this)">ลบ</button>';
-            newRow.appendChild(deleteCell);
-
-            document.getElementById('expensesTable').appendChild(newRow);
-
-            // Update total balance
+            addEntryToTable(newEntry);
             updateTotalBalance();
         } else {
             alert('กรุณากรอกข้อมูลให้ครบถ้วน');
         }
     }
 
+    function getStoredEntries() {
+        const entries = localStorage.getItem(ENTRY_STORAGE_KEY);
+        return entries ? JSON.parse(entries) : [];
+    }
+
+    function addEntryToTable(entry) {
+        const newRow = document.createElement('tr');
+        const descriptionCell = document.createElement('td');
+        descriptionCell.textContent = entry.description;
+        newRow.appendChild(descriptionCell);
+
+        const amountCell = document.createElement('td');
+        amountCell.textContent = entry.type === 'income' ? entry.amount.toFixed(2) : '';
+        newRow.appendChild(amountCell);
+
+        const expenseCell = document.createElement('td');
+        expenseCell.textContent = entry.type === 'expense' ? entry.amount.toFixed(2) : '';
+        newRow.appendChild(expenseCell);
+
+        const balanceCell = document.createElement('td');
+        balanceCell.textContent = ''; // Calculated balance will be added here
+        newRow.appendChild(balanceCell);
+
+        const deleteCell = document.createElement('td');
+        deleteCell.innerHTML = '<button onclick="deleteRow(this)">ลบ</button>';
+        newRow.appendChild(deleteCell);
+
+        document.getElementById('expensesTable').appendChild(newRow);
+    }
+
     function deleteRow(button) {
-        button.parentElement.parentElement.remove();
+        const row = button.parentElement.parentElement;
+        const description = row.cells[0].textContent;
+        const amount = parseFloat(row.cells[1].textContent || row.cells[2].textContent);
+        const type = row.cells[1].textContent ? 'income' : 'expense';
+        const selectedMonth = document.getElementById('month').value;
+        const selectedYear = document.getElementById('year').value;
+
+        const entries = getStoredEntries();
+        const entryIndex = entries.findIndex(entry => entry.description === description && entry.amount === amount && entry.type === type && entry.month === selectedMonth && entry.year === selectedYear);
+
+        if (entryIndex !== -1) {
+            entries.splice(entryIndex, 1);
+            localStorage.setItem(ENTRY_STORAGE_KEY, JSON.stringify(entries));
+        }
+
+        row.remove();
         updateTotalBalance();
     }
 
@@ -344,6 +381,24 @@
 
         const totalBalance = totalIncome - totalExpense;
         document.getElementById('totalBalance').textContent = totalBalance.toFixed(2);
+    }
+
+    function loadEntries() {
+        const entries = getStoredEntries();
+        const selectedMonth = document.getElementById('month').value;
+        const selectedYear = document.getElementById('year').value;
+
+        document.querySelectorAll('#expensesTable tr').forEach((row, index) => {
+            if (index !== 0) row.remove();
+        });
+
+        entries.forEach(entry => {
+            if (entry.month === selectedMonth && entry.year === selectedYear) {
+                addEntryToTable(entry);
+            }
+        });
+
+        updateTotalBalance();
     }
 
     // Initialize calendar
@@ -407,13 +462,18 @@
 
     document.getElementById('month').addEventListener('change', function() {
         renderCalendar(this.value, document.getElementById('year').value);
+        loadEntries();
     });
 
     document.getElementById('year').addEventListener('change', function() {
         renderCalendar(document.getElementById('month').value, this.value);
+        loadEntries();
     });
 
-    initCalendar();
+    window.addEventListener('load', () => {
+        initCalendar();
+        loadEntries();
+    });
 </script>
 
 </body>
