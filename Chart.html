@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สรุปค่าใช้จ่าย</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e8f5e9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 24px;
+            color: #388e3c;
+        }
+        canvas {
+            max-width: 100%;
+            margin: 20px auto;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #388e3c;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #2e7d32;
+        }
+        .dropdown {
+            margin-bottom: 20px;
+        }
+        select {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        .delete-btn:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>บันทึกค่าใช้จ่าย</h1>
+        <div class="dropdown">
+            <label for="monthSelect">เลือกเดือน:</label>
+            <select id="monthSelect"></select>
+            <label for="yearSelect">เลือกปี:</label>
+            <select id="yearSelect"></select>
+        </div>
+        <canvas id="expenseChart"></canvas>
+        <a href="index.html" class="btn">กลับสู่หน้าหลัก</a>
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", 
+                            "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        const colors = [
+            'rgba(76, 175, 80, 0.7)', // Green
+            'rgba(139, 195, 74, 0.7)', // Light Green
+            'rgba(205, 220, 57, 0.7)', // Lime
+            'rgba(255, 235, 59, 0.7)', // Yellow
+            'rgba(255, 193, 7, 0.7)', // Amber
+            'rgba(255, 152, 0, 0.7)' // Orange
+        ];
+
+        document.addEventListener('DOMContentLoaded', function () {
+            populateMonthAndYearSelect();
+            document.getElementById('monthSelect').addEventListener('change', renderChart);
+            document.getElementById('yearSelect').addEventListener('change', renderChart);
+            renderChart();
+        });
+
+        function populateMonthAndYearSelect() {
+            const monthSelect = document.getElementById('monthSelect');
+            const yearSelect = document.getElementById('yearSelect');
+
+            const currentYear = new Date().getFullYear();
+            const currentMonth = new Date().getMonth() + 1;
+
+            for (let i = 0; i < monthNames.length; i++) {
+                const option = document.createElement('option');
+                option.value = i + 1;
+                option.textContent = monthNames[i];
+                if (i + 1 === currentMonth) option.selected = true;
+                monthSelect.appendChild(option);
+            }
+
+            for (let i = currentYear; i >= currentYear - 5; i--) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                if (i === currentYear) option.selected = true;
+                yearSelect.appendChild(option);
+            }
+        }
+
+        function renderChart() {
+            const selectedMonth = parseInt(document.getElementById('monthSelect').value);
+            const selectedYear = parseInt(document.getElementById('yearSelect').value);
+
+            const transactions = getTransactionsForMonthAndYear(selectedMonth, selectedYear);
+            const categories = categorizeTransactions(transactions);
+            const labels = categories.map(category => category.description);
+            const data = categories.map(category => category.amount);
+
+            const ctx = document.getElementById('expenseChart').getContext('2d');
+            const chart = Chart.getChart(ctx); // Get the existing chart instance
+
+            if (chart) {
+                chart.destroy(); // Destroy the existing chart before creating a new one
+            }
+
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'ค่าใช้จ่าย',
+                        data: data,
+                        backgroundColor: colors.sort(() => 0.5 - Math.random()),
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: `สัดส่วนค่าใช้จ่าย (${monthNames[selectedMonth - 1]} ${selectedYear})`
+                        }
+                    }
+                }
+            });
+        }
+
+        function getTransactionsForMonthAndYear(month, year) {
+            const transactions = getTransactions();
+            return transactions.filter(transaction => {
+                const transactionDate = new Date(transaction.date);
+                return transactionDate.getMonth() + 1 === month && transactionDate.getFullYear() === year;
+            });
+        }
+
+        function categorizeTransactions(transactions) {
+            const categories = {};
+
+            transactions.forEach(transaction => {
+                if (!categories[transaction.description]) {
+                    categories[transaction.description] = 0;
+                }
+                categories[transaction.description] += transaction.amount;
+            });
+
+            return Object.keys(categories).map(description => ({
+                description,
+                amount: categories[description]
+            }));
+        }
+
+        function getTransactions() {
+            const transactions = localStorage.getItem('transactions');
+            return transactions ? JSON.parse(transactions) : [];
+        }
+    </script>
+</body>
+</html>
