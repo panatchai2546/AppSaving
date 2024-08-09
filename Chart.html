@@ -57,27 +57,11 @@
             font-size: 16px;
             margin-right: 10px;
         }
-        .error-message {
-            color: red;
-            margin-top: 10px;
-        }
-        .delete-btn {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 5px 10px;
-            cursor: pointer;
-            margin-left: 5px;
-        }
-        .delete-btn:hover {
-            opacity: 0.8;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>บันทึกค่าใช้จ่าย</h1>
+        <h1>สรุปค่าใช้จ่าย</h1>
         <div class="dropdown">
             <label for="monthSelect">เลือกเดือน:</label>
             <select id="monthSelect"></select>
@@ -85,8 +69,6 @@
             <select id="yearSelect"></select>
         </div>
         <canvas id="expenseChart"></canvas>
-        <a href="index.html" class="btn">กลับสู่หน้าหลัก</a>
-        <div id="errorMessage" class="error-message"></div>
     </div>
 
     <!-- Chart.js -->
@@ -203,8 +185,22 @@
         }
 
         function getTransactions() {
-            const transactions = localStorage.getItem('transactions');
+            const selectedMonth = parseInt(document.getElementById('monthSelect').value);
+            const selectedYear = parseInt(document.getElementById('yearSelect').value);
+
+            // Key for the month and year combination
+            const key = `transactions_${selectedMonth}_${selectedYear}`;
+            const transactions = localStorage.getItem(key);
             return transactions ? JSON.parse(transactions) : [];
+        }
+
+        function saveTransactions(transactions) {
+            const selectedMonth = parseInt(document.getElementById('monthSelect').value);
+            const selectedYear = parseInt(document.getElementById('yearSelect').value);
+
+            // Key for the month and year combination
+            const key = `transactions_${selectedMonth}_${selectedYear}`;
+            localStorage.setItem(key, JSON.stringify(transactions));
         }
     </script>
 </body>
