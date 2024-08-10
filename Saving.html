@@ -3,375 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>บันทึกการเก็บเงิน</title>
+    <title>การแสดงผลค่าใช้จ่าย</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
         }
         .container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 20px;
             border: 1px solid #ccc;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        h1 {
+        h1, h2 {
             text-align: center;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        table, th, td {
-            border: 1px solid #ccc;
-        }
-        th, td {
-            padding: 9px;
-            text-align: center;
-        }
-        .scrollable-table {
-            max-height: 200px; /* Adjust the height as needed */
-            overflow-y: auto;
-            display: block;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        input[type="text"], input[type="number"], select {
-            width: calc(100% - 22px);
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box; /* Ensure padding and border are included in width */
-        }
-        .transaction-btn {
-            width: calc(100% - 22px);
-            padding: 10px;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-bottom: 10px;
-        }
-        .deposit-btn {
-            background-color: #28a745;
-        }
-        .withdraw-btn {
-            background-color: #dc3545;
-        }
-        .transaction-btn:hover {
-            opacity: 0.8;
-        }
-        .money-img {
-            display: block;
-            margin: 0 auto;
-            max-width: 100%;
-            height: auto;
-        }
-        .error-message {
-            color: red;
-            text-align: center;
-        }
-        .delete-btn {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-        .delete-btn:hover {
-            opacity: 0.8;
-        }
-                        .container {
-            position: relative;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .back-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            display: inline-block;
-        }
-
-        .back-img {
-            width: 40px; /* Adjust the width as needed */
-            height: auto;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-            width: 100%;
-        }
-        .header h1 {
-            margin: 0;
-        }
-        .header img {
+        canvas {
             max-width: 100%;
             height: auto;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-<!--         <a href="https://panatchai2546.github.io/AppSaving/Home.html" class="back-btn">
-            <img src="back_home.png" alt="ย้อนกลับ" class="back-img">
-        </a> -->
-    </div>
     <div class="container">
-        <a href="https://panatchai2546.github.io/AppSaving/HomeIce.html" class="back-btn">
-            <img src="back_home.png" alt="ย้อนกลับ" class="back-img">
-        </a>
-        <h1>บันทึกการเก็บเงิน</h1>
-        <img src="Money.jpg" alt="Money" class="money-img">
-        <p></p>
-        <form id="savingsForm">
-            <input type="text" id="description" placeholder="คำอธิบาย" required>
-            <input type="number" id="amount" placeholder="จำนวนเงิน" required>
-            <select id="transactionType">
-                <option value="deposit">การฝาก</option>
-                <option value="withdraw">การถอน</option>
-            </select>
-            <input type="submit" value="เพิ่มรายการ" id="transactionBtn" class="transaction-btn deposit-btn">
-        </form>
-        <div id="errorMessage" class="error-message"></div>
-        <h2>รายการทั้งหมด</h2>
-        <div class="scrollable-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>วันที่</th>
-                        <th>คำอธิบาย</th>
-                        <th>จำนวนเงิน</th>
-                        <th>รายการ</th>
-                        <th>ลบ</th>
-                    </tr>
-                </thead>
-                <tbody id="transactionList">
-                    <!-- List will be populated here -->
-                </tbody>
-            </table>
-        </div>
-        <h2>ยอดรวม: <span id="totalAmount">0</span> บาท</h2>
-        <h2>ตารางหมวดหมู่</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>คำอธิบาย</th>
-                    <th>จำนวนเงินรวม</th>
-                </tr>
-            </thead>
-            <tbody id="categoryList">
-                <!-- Categories will be populated here -->
-            </tbody>
-        </table>
+        <h1>แสดงผลค่าใช้จ่าย</h1>
+        <canvas id="expenseChart"></canvas>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        document.getElementById('transactionType').addEventListener('change', function() {
-            const transactionType = this.value;
-            const transactionBtn = document.getElementById('transactionBtn');
-
-            if (transactionType === 'deposit') {
-                transactionBtn.classList.add('deposit-btn');
-                transactionBtn.classList.remove('withdraw-btn');
-                transactionBtn.value = 'เพิ่มรายการ';
-            } else {
-                transactionBtn.classList.add('withdraw-btn');
-                transactionBtn.classList.remove('deposit-btn');
-                transactionBtn.value = 'เพิ่มรายการ';
+        // ฟังก์ชันเพื่อดึงข้อมูลจากเว็บไซต์หรือ API
+        async function fetchTransactions(url) {
+            try {
+                const response = await fetch(url);
+                const text = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                
+                // ดึงข้อมูลจากตารางที่มี id 'transactionList' 
+                const rows = doc.querySelectorAll('#transactionList tbody tr');
+                const transactions = [];
+                
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    const description = cells[1].textContent;
+                    const amount = parseFloat(cells[2].textContent);
+                    if (!isNaN(amount)) {
+                        transactions.push({ description, amount });
+                    }
+                });
+                
+                return transactions;
+            } catch (error) {
+                console.error('Error fetching transactions:', error);
+                return [];
             }
-        });
-
-        document.getElementById('savingsForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const transactionType = document.getElementById('transactionType').value;
-            if (transactionType === 'deposit') {
-                addDeposit();
-            } else {
-                addWithdraw();
-            }
-        });
-
-        function addDeposit() {
-            const description = document.getElementById('description').value;
-            const amount = parseFloat(document.getElementById('amount').value);
-            const date = new Date().toLocaleDateString('th-TH', {
-                timeZone: 'Asia/Bangkok'
-            });
-            if (!description || isNaN(amount) || amount <= 0) return;
-
-            const transactions = getTransactions();
-            transactions.push({ date, description, amount, type: 'การฝาก' });
-            saveTransactions(transactions);
-
-            updateCategory(description, amount);
-            renderTransactions();
-            renderCategories();
         }
 
-        function addWithdraw() {
-            const description = document.getElementById('description').value;
-            const amount = parseFloat(document.getElementById('amount').value);
-            const date = new Date().toLocaleDateString('th-TH', {
-                timeZone: 'Asia/Bangkok'
-            });
-            if (!description || isNaN(amount) || amount <= 0) return;
+        function categorizeTransactions(transactions) {
+            const categories = {};
 
-            const total = getTotalAmount();
-            const categories = getCategories();
-            const existingCategory = categories.find(cat => cat.description === description);
-
-            if (!existingCategory) {
-                document.getElementById('errorMessage').textContent = 'ไม่พบคำอธิบายที่ตรงกันในหมวดหมู่';
-                return;
-            }
-
-            if (amount > total || existingCategory.amount < amount) {
-                document.getElementById('errorMessage').textContent = 'ยอดเงินไม่เพียงพอสำหรับการถอน';
-                return;
-            } else {
-                document.getElementById('errorMessage').textContent = '';
-            }
-
-            const transactions = getTransactions();
-            transactions.push({ date, description, amount, type: 'การถอน' });
-            saveTransactions(transactions);
-
-            updateCategory(description, -amount);
-            renderTransactions();
-            renderCategories();
-        }
-
-        function deleteTransaction(index) {
-            const transactions = getTransactions();
-            const transactionToDelete = transactions[index];
-
-            // Update categories and total amount
-            updateCategory(transactionToDelete.description, transactionToDelete.type === 'การฝาก' ? -transactionToDelete.amount : transactionToDelete.amount);
-
-            transactions.splice(index, 1);
-            saveTransactions(transactions);
-
-            renderTransactions();
-            renderCategories();
-        }
-
-        function getTransactions() {
-            const transactions = localStorage.getItem('transactions');
-            return transactions ? JSON.parse(transactions) : [];
-        }
-
-        function saveTransactions(transactions) {
-            localStorage.setItem('transactions', JSON.stringify(transactions));
-        }
-
-        function getCategories() {
-            const categories = localStorage.getItem('categories');
-            return categories ? JSON.parse(categories) : [];
-        }
-
-        function saveCategories(categories) {
-            localStorage.setItem('categories', JSON.stringify(categories));
-        }
-
-        function updateCategory(description, amount) {
-            const categories = getCategories();
-            const existingCategory = categories.find(cat => cat.description === description);
-
-            if (existingCategory) {
-                existingCategory.amount += amount;
-                if (existingCategory.amount <= 0) {
-                    categories.splice(categories.indexOf(existingCategory), 1);
+            transactions.forEach(transaction => {
+                if (!categories[transaction.description]) {
+                    categories[transaction.description] = 0;
                 }
-            } else if (amount > 0) {
-                categories.push({ description, amount });
+                categories[transaction.description] += transaction.amount;
+            });
+
+            return Object.keys(categories).map(description => ({
+                description,
+                amount: categories[description]
+            }));
+        }
+
+        function renderChart(transactions) {
+            const categories = categorizeTransactions(transactions);
+            const labels = categories.map(category => category.description);
+            const data = categories.map(category => category.amount);
+
+            const ctx = document.getElementById('expenseChart').getContext('2d');
+            const chart = Chart.getChart(ctx);
+
+            if (chart) {
+                chart.destroy();
             }
 
-            saveCategories(categories);
-        }
-
-        function renderTransactions() {
-            const transactionList = document.getElementById('transactionList');
-            transactionList.innerHTML = '';
-            const transactions = getTransactions();
-            transactions.forEach((transaction, index) => {
-                const row = document.createElement('tr');
-
-                const dateCell = document.createElement('td');
-                dateCell.textContent = transaction.date;
-                row.appendChild(dateCell);
-
-                const descCell = document.createElement('td');
-                descCell.textContent = transaction.description;
-                row.appendChild(descCell);
-
-                const amountCell = document.createElement('td');
-                amountCell.textContent = transaction.amount.toFixed(2);
-                row.appendChild(amountCell);
-
-                const typeCell = document.createElement('td');
-                typeCell.textContent = transaction.type;
-                row.appendChild(typeCell);
-
-                const deleteCell = document.createElement('td');
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = 'ลบ';
-                deleteBtn.classList.add('delete-btn');
-                deleteBtn.onclick = () => deleteTransaction(index);
-                deleteCell.appendChild(deleteBtn);
-                row.appendChild(deleteCell);
-
-                transactionList.appendChild(row);
-            });
-            updateTotal();
-        }
-
-        function renderCategories() {
-            const categoryList = document.getElementById('categoryList');
-            categoryList.innerHTML = '';
-            const categories = getCategories();
-            categories.forEach(category => {
-                const row = document.createElement('tr');
-
-                const descCell = document.createElement('td');
-                descCell.textContent = category.description;
-                row.appendChild(descCell);
-
-                const amountCell = document.createElement('td');
-                amountCell.textContent = category.amount.toFixed(2);
-                row.appendChild(amountCell);
-
-                categoryList.appendChild(row);
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'ค่าใช้จ่าย',
+                        data: data,
+                        backgroundColor: colors.sort(() => 0.5 - Math.random()),
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'สัดส่วนค่าใช้จ่าย'
+                        }
+                    }
+                }
             });
         }
 
-        function getTotalAmount() {
-            const categories = getCategories();
-            return categories.reduce((total, category) => total + category.amount, 0);
-        }
+        // URL ของเว็บไซต์หรือ API ที่มีข้อมูล
+        const dataUrl = 'https://example.com/your-table-page.html'; // เปลี่ยน URL ตามที่ต้องการ
 
-        function updateTotal() {
-            const totalAmount = document.getElementById('totalAmount');
-            totalAmount.textContent = getTotalAmount().toFixed(2);
-        }
-
-        renderTransactions();
-        renderCategories();
+        fetchTransactions(dataUrl).then(transactions => {
+            if (transactions.length > 0) {
+                renderChart(transactions);
+            } else {
+                console.error('No transactions found.');
+            }
+        });
     </script>
 </body>
 </html>
