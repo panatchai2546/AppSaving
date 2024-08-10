@@ -122,6 +122,10 @@
             const selectedYear = parseInt(document.getElementById('yearSelect').value);
 
             const transactions = getTransactionsForMonthAndYear(selectedMonth, selectedYear);
+            processTransactions(transactions);
+        }
+
+        function processTransactions(transactions) {
             const categories = categorizeTransactions(transactions);
             const labels = categories.map(category => category.description);
             const data = categories.map(category => category.amount);
@@ -134,7 +138,7 @@
             }
 
             new Chart(ctx, {
-                type: 'pie',
+                type: 'doughnut', // เปลี่ยนประเภทกราฟเป็นโดนัท
                 data: {
                     labels: labels,
                     datasets: [{
@@ -160,14 +164,6 @@
             });
         }
 
-        function getTransactionsForMonthAndYear(month, year) {
-            const transactions = getTransactions();
-            return transactions.filter(transaction => {
-                const transactionDate = new Date(transaction.date);
-                return transactionDate.getMonth() + 1 === month && transactionDate.getFullYear() === year;
-            });
-        }
-
         function categorizeTransactions(transactions) {
             const categories = {};
 
@@ -184,6 +180,14 @@
             }));
         }
 
+        function getTransactionsForMonthAndYear(month, year) {
+            const transactions = getTransactions();
+            return transactions.filter(transaction => {
+                const transactionDate = new Date(transaction.date);
+                return transactionDate.getMonth() + 1 === month && transactionDate.getFullYear() === year;
+            });
+        }
+
         function getTransactions() {
             const selectedMonth = parseInt(document.getElementById('monthSelect').value);
             const selectedYear = parseInt(document.getElementById('yearSelect').value);
@@ -192,15 +196,6 @@
             const key = `transactions_${selectedMonth}_${selectedYear}`;
             const transactions = localStorage.getItem(key);
             return transactions ? JSON.parse(transactions) : [];
-        }
-
-        function saveTransactions(transactions) {
-            const selectedMonth = parseInt(document.getElementById('monthSelect').value);
-            const selectedYear = parseInt(document.getElementById('yearSelect').value);
-
-            // Key for the month and year combination
-            const key = `transactions_${selectedMonth}_${selectedYear}`;
-            localStorage.setItem(key, JSON.stringify(transactions));
         }
     </script>
 </body>
