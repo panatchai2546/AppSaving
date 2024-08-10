@@ -34,7 +34,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // ฟังก์ชันเพื่อดึงข้อมูลจากเว็บไซต์หรือ API
+        const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'];
+
         async function fetchTransactions(url) {
             try {
                 const response = await fetch(url);
@@ -42,16 +43,19 @@
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(text, 'text/html');
                 
-                // ดึงข้อมูลจากตารางที่มี id 'transactionList' 
                 const rows = doc.querySelectorAll('#transactionList tbody tr');
                 const transactions = [];
                 
                 rows.forEach(row => {
                     const cells = row.querySelectorAll('td');
-                    const description = cells[1].textContent;
-                    const amount = parseFloat(cells[2].textContent);
-                    if (!isNaN(amount)) {
-                        transactions.push({ description, amount });
+                    const description = cells[0].textContent; // คำอธิบาย
+                    const income = parseFloat(cells[1].textContent); // รายรับ
+                    const expense = parseFloat(cells[2].textContent); // รายจ่าย
+                    if (!isNaN(income) || !isNaN(expense)) {
+                        transactions.push({
+                            description,
+                            amount: (isNaN(expense) ? 0 : -expense) + (isNaN(income) ? 0 : income) // คำนวณยอดรวม
+                        });
                     }
                 });
                 
@@ -117,8 +121,7 @@
             });
         }
 
-        // URL ของเว็บไซต์หรือ API ที่มีข้อมูล
-        const dataUrl = 'https://example.com/your-table-page.html'; // เปลี่ยน URL ตามที่ต้องการ
+        const dataUrl = 'https://panatchai2546.github.io/AppSaving/Saving.html'; // URL ของหน้าเว็บที่ต้องการดึงข้อมูล
 
         fetchTransactions(dataUrl).then(transactions => {
             if (transactions.length > 0) {
