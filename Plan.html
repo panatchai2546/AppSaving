@@ -292,8 +292,8 @@
         const selectedMonth = document.getElementById('month').value;
         const selectedYear = document.getElementById('year').value;
 
-        if (!entryDescription || isNaN(entryAmount)) {
-            alert('กรุณากรอกรายละเอียดและจำนวนเงินให้ถูกต้อง');
+        if (!entryDescription || isNaN(entryAmount) || entryAmount <= 0) {
+            alert('กรุณากรอกข้อมูลให้ครบถ้วน');
             return;
         }
 
@@ -312,19 +312,20 @@
         document.getElementById('entryDescription').value = '';
         document.getElementById('entryAmount').value = '';
 
-        renderTable(entries);
-        calculateBalance(entries);
+        renderTable();
+        calculateBalance();
     }
 
     function deleteEntry(index) {
-        const entries = JSON.parse(localStorage.getItem(ENTRY_STORAGE_KEY)) || [];
+        let entries = JSON.parse(localStorage.getItem(ENTRY_STORAGE_KEY)) || [];
         entries.splice(index, 1);
         localStorage.setItem(ENTRY_STORAGE_KEY, JSON.stringify(entries));
-        renderTable(entries);
-        calculateBalance(entries);
+
+        renderTable();
+        calculateBalance();
     }
 
-    function renderTable(entries) {
+    function renderTable() {
         const table = document.getElementById('expensesTable');
         table.innerHTML = `
             <tr>
@@ -338,6 +339,8 @@
         const selectedMonth = document.getElementById('month').value;
         const selectedYear = document.getElementById('year').value;
 
+        const entries = JSON.parse(localStorage.getItem(ENTRY_STORAGE_KEY)) || [];
+
         entries.forEach((entry, index) => {
             if (entry.month === selectedMonth && entry.year === selectedYear) {
                 const row = document.createElement('tr');
@@ -345,16 +348,23 @@
                     <td>${entry.description}</td>
                     <td>${entry.type === 'income' ? entry.amount.toFixed(2) : ''}</td>
                     <td>${entry.type === 'expense' ? entry.amount.toFixed(2) : ''}</td>
-                    <td><button onclick="deleteEntry(${index})">ลบ</button></td>
+                    <td><button onclick="deleteEntry(${entries.indexOf(entry)})">ลบ</button></td>
                 `;
                 table.appendChild(row);
             }
         });
     }
 
-    function calculateBalance(entries) {
+    function calculateBalance() {
+        const entries = JSON.parse(localStorage.getItem(ENTRY_STORAGE_KEY)) || [];
+        const selectedMonth = document.getElementById('month').value;
+        const selectedYear = document.getElementById('year').value;
+
         const totalBalance = entries.reduce((balance, entry) => {
-            return entry.type === 'income' ? balance + entry.amount : balance - entry.amount;
+            if (entry.month === selectedMonth && entry.year === selectedYear) {
+                return entry.type === 'income' ? balance + entry.amount : balance - entry.amount;
+            }
+            return balance;
         }, 0);
 
         document.getElementById('totalBalance').textContent = totalBalance.toFixed(2);
@@ -442,23 +452,24 @@
         monthSelect.value = currentMonth;
         yearSelect.value = currentYear;
 
-        const entries = JSON.parse(localStorage.getItem(ENTRY_STORAGE_KEY)) || [];
         renderCalendar(currentMonth, currentYear);
-        renderTable(entries);
-        calculateBalance(entries);
+        renderTable();
+        calculateBalance();
 
         monthSelect.addEventListener('change', () => {
             const selectedMonth = parseInt(monthSelect.value);
             const selectedYear = parseInt(yearSelect.value);
             renderCalendar(selectedMonth, selectedYear);
-            renderTable(entries);
+            renderTable();
+            calculateBalance();
         });
 
         yearSelect.addEventListener('change', () => {
             const selectedMonth = parseInt(monthSelect.value);
             const selectedYear = parseInt(yearSelect.value);
             renderCalendar(selectedMonth, selectedYear);
-            renderTable(entries);
+            renderTable();
+            calculateBalance();
         });
     });
 </script>
