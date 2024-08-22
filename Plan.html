@@ -298,6 +298,7 @@
         }
 
         const entry = {
+            id: Date.now(), // Generate a unique ID for each entry
             description: entryDescription,
             amount: entryAmount,
             type: entryType,
@@ -316,9 +317,9 @@
         calculateBalance();
     }
 
-    function deleteEntry(index) {
+    function deleteEntry(id) {
         let entries = JSON.parse(localStorage.getItem(ENTRY_STORAGE_KEY)) || [];
-        entries.splice(index, 1);
+        entries = entries.filter(entry => entry.id !== id);
         localStorage.setItem(ENTRY_STORAGE_KEY, JSON.stringify(entries));
 
         renderTable();
@@ -341,14 +342,14 @@
 
         const entries = JSON.parse(localStorage.getItem(ENTRY_STORAGE_KEY)) || [];
 
-        entries.forEach((entry, index) => {
+        entries.forEach(entry => {
             if (entry.month === selectedMonth && entry.year === selectedYear) {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${entry.description}</td>
                     <td>${entry.type === 'income' ? entry.amount.toFixed(2) : ''}</td>
                     <td>${entry.type === 'expense' ? entry.amount.toFixed(2) : ''}</td>
-                    <td><button onclick="deleteEntry(${entries.indexOf(entry)})">ลบ</button></td>
+                    <td><button onclick="deleteEntry(${entry.id})">ลบ</button></td>
                 `;
                 table.appendChild(row);
             }
