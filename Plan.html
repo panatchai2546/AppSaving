@@ -287,88 +287,85 @@
     const ENTRY_STORAGE_KEY = 'financial_entries';
 
     function addEntry() {
-    const entryType = document.getElementById('entryType').value;
-    const entryDescription = document.getElementById('entryDescription').value;
-    const entryAmount = parseFloat(document.getElementById('entryAmount').value);
-    const selectedMonth = document.getElementById('month').value;
-    const selectedYear = document.getElementById('year').value;
+        const entryType = document.getElementById('entryType').value;
+        const entryDescription = document.getElementById('entryDescription').value;
+        const entryAmount = parseFloat(document.getElementById('entryAmount').value);
+        const selectedMonth = document.getElementById('month').value;
+        const selectedYear = document.getElementById('year').value;
+        const storageKey = `financial_entries_${selectedMonth}_${selectedYear}`;
 
-    if (!entryDescription || isNaN(entryAmount)) {
-        alert('กรุณากรอกรายละเอียดและจำนวนเงินให้ถูกต้อง');
-        return;
-    }
+        if (!entryDescription || isNaN(entryAmount)) {
+            alert('กรุณากรอกรายละเอียดและจำนวนเงินให้ถูกต้อง');
+            return;
+        }
 
-    const entry = {
-        description: entryDescription,
-        amount: entryAmount,
-        type: entryType,
-        date: new Date().toISOString(),
-        month: selectedMonth,
-        year: selectedYear
-    };
+        const entry = {
+            description: entryDescription,
+            amount: entryAmount,
+            type: entryType,
+            date: new Date().toISOString(),
+        };
 
-    let entries = JSON.parse(localStorage.getItem(ENTRY_STORAGE_KEY)) || [];
-    entries.push(entry);
-    localStorage.setItem(ENTRY_STORAGE_KEY, JSON.stringify(entries));
+        let entries = JSON.parse(localStorage.getItem(storageKey)) || [];
+        entries.push(entry);
+        localStorage.setItem(storageKey, JSON.stringify(entries));
 
-    loadEntries();
+        loadEntries();
 
-    // Reset form
-    document.getElementById('entryDescription').value = '';
-    document.getElementById('entryAmount').value = '';
-    document.getElementById('entryType').value = 'income';
+        // Reset form
+        document.getElementById('entryDescription').value = '';
+        document.getElementById('entryAmount').value = '';
+        document.getElementById('entryType').value = 'income';
     }
 
     function loadEntries() {
-    const table = document.getElementById('expensesTable');
-    const balanceSpan = document.getElementById('totalBalance');
-    const selectedMonth = document.getElementById('month').value;
-    const selectedYear = document.getElementById('year').value;
-    
-    table.innerHTML = `
-        <tr>
-            <th>รายการ</th>
-            <th>รายรับ</th>
-            <th>รายจ่าย</th>
-            <th>ลบ</th>
-        </tr>
-    `;
+        const table = document.getElementById('expensesTable');
+        const balanceSpan = document.getElementById('totalBalance');
+        const selectedMonth = document.getElementById('month').value;
+        const selectedYear = document.getElementById('year').value;
+        const storageKey = `financial_entries_${selectedMonth}_${selectedYear}`;
 
-    let totalBalance = 0;
-    let entries = JSON.parse(localStorage.getItem(ENTRY_STORAGE_KEY)) || [];
-
-    entries = entries.filter(entry => entry.month === selectedMonth && entry.year === selectedYear);
-
-    entries.forEach((entry, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${entry.description}</td>
-            <td>${entry.type === 'income' ? entry.amount : ''}</td>
-            <td>${entry.type === 'expense' ? entry.amount : ''}</td>
-            <td><button onclick="deleteEntry(${index})">ลบ</button></td>
+        table.innerHTML = `
+            <tr>
+                <th>รายการ</th>
+                <th>รายรับ</th>
+                <th>รายจ่าย</th>
+                <th>ลบ</th>
+            </tr>
         `;
-        table.appendChild(row);
 
-        if (entry.type === 'income') {
-            totalBalance += entry.amount;
-        } else {
-            totalBalance -= entry.amount;
-        }
-    });
+        let totalBalance = 0;
+        let entries = JSON.parse(localStorage.getItem(storageKey)) || [];
 
-    balanceSpan.textContent = totalBalance.toLocaleString();
+        entries.forEach((entry, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${entry.description}</td>
+                <td>${entry.type === 'income' ? entry.amount : ''}</td>
+                <td>${entry.type === 'expense' ? entry.amount : ''}</td>
+                <td><button onclick="deleteEntry(${index})">ลบ</button></td>
+            `;
+            table.appendChild(row);
+
+            if (entry.type === 'income') {
+                totalBalance += entry.amount;
+            } else {
+                totalBalance -= entry.amount;
+            }
+        });
+
+        balanceSpan.textContent = totalBalance.toLocaleString();
     }
 
     function deleteEntry(index) {
-    let entries = JSON.parse(localStorage.getItem(ENTRY_STORAGE_KEY)) || [];
-    const selectedMonth = document.getElementById('month').value;
-    const selectedYear = document.getElementById('year').value;
+        const selectedMonth = document.getElementById('month').value;
+        const selectedYear = document.getElementById('year').value;
+        const storageKey = `financial_entries_${selectedMonth}_${selectedYear}`;
+        let entries = JSON.parse(localStorage.getItem(storageKey)) || [];
 
-    entries = entries.filter(entry => entry.month === selectedMonth && entry.year === selectedYear);
-
-    entries.splice(index, 1);
-    localStorage.setItem(ENTRY_STORAGE_KEY, JSON.stringify(entries));
-    loadEntries();
+        entries.splice(index, 1);
+        localStorage.setItem(storageKey, JSON.stringify(entries));
+        loadEntries();
     }
 
     function initCalendar() {
@@ -401,69 +398,6 @@
         renderCalendar(now.getMonth(), currentYear);
     }
 
-    const THAI_HOLIDAYS = {
-        2024: {
-            0: [1], // มกราคม: วันขึ้นปีใหม่ (1 ม.ค.)
-            2: [6], // มีนาคม: วันมาฆบูชา (6 มี.ค.)
-            3: [6, 13, 14, 15], // เมษายน: วันจักรี (6 เม.ย.), วันสงกรานต์ (13-15 เม.ย.)
-            4: [1, 4], // พฤษภาคม: วันแรงงานแห่งชาติ (1 พ.ค.), วันฉัตรมงคล (4 พ.ค.)
-            5: [3], // มิถุนายน: วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าฯ พระบรมราชินี (3 มิ.ย.)
-            7: [12], // สิงหาคม: วันแม่แห่งชาติ (12 ส.ค.)
-            9: [13, 23], // ตุลาคม: วันคล้ายวันสวรรคต ร.9 (13 ต.ค.), วันปิยมหาราช (23 ต.ค.)
-            11: [5, 10, 31], // ธันวาคม: วันพ่อแห่งชาติ (5 ธ.ค.), วันรัฐธรรมนูญ (10 ธ.ค.), วันสิ้นปี (31 ธ.ค.)
-        },
-        // เพิ่มข้อมูลวันหยุดของปีอื่น ๆ ตามความต้องการ
-    };
-
-    function isThaiHoliday(day, month, year) {
-        if (THAI_HOLIDAYS[year] && THAI_HOLIDAYS[year][month]) {
-            return THAI_HOLIDAYS[year][month].includes(day);
-        }
-        return false;
-    }
-
-    function renderCalendar(month, year) {
-        const calendar = document.getElementById('calendar');
-        calendar.innerHTML = '';
-
-        const date = new Date(year, month);
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const firstDay = new Date(year, month, 1).getDay();
-
-        // Create day headers
-        const daysOfWeek = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
-        daysOfWeek.forEach(day => {
-            const dayHeader = document.createElement('div');
-            dayHeader.className = 'day-header';
-            dayHeader.textContent = day;
-            calendar.appendChild(dayHeader);
-        });
-
-        // Add empty cells before the first day
-        for (let i = 0; i < firstDay; i++) {
-            const emptyCell = document.createElement('div');
-            calendar.appendChild(emptyCell);
-        }
-
-        // Add days of the month
-        for (let i = 1; i <= daysInMonth; i++) {
-            const dayCell = document.createElement('div');
-            dayCell.textContent = i;
-
-            // Highlight today's date
-            if (i === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear()) {
-                dayCell.classList.add('today');
-            }
-
-            // Change color to red if it's a Thai holiday
-            if (isThaiHoliday(i, month, year)) {
-                dayCell.style.color = 'red';
-            }
-
-            calendar.appendChild(dayCell);
-        }
-    }
-
     document.getElementById('month').addEventListener('change', function() {
         renderCalendar(this.value, document.getElementById('year').value);
         loadEntries();
@@ -473,6 +407,46 @@
         renderCalendar(document.getElementById('month').value, this.value);
         loadEntries();
     });
+
+    function renderCalendar(month, year) {
+        const calendar = document.getElementById('calendar');
+        calendar.innerHTML = '';
+
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+
+        const monthDays = [];
+
+        for (let i = 0; i < firstDay.getDay(); i++) {
+            monthDays.push(null);
+        }
+
+        for (let i = 1; i <= lastDay.getDate(); i++) {
+            monthDays.push(new Date(year, month, i));
+        }
+
+        const daysOfWeek = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+
+        daysOfWeek.forEach(day => {
+            const dayHeader = document.createElement('div');
+            dayHeader.className = 'day-header';
+            dayHeader.textContent = day;
+            calendar.appendChild(dayHeader);
+        });
+
+        monthDays.forEach(day => {
+            const dayElement = document.createElement('div');
+            if (day) {
+                dayElement.textContent = day.getDate();
+                if (day.toDateString() === today.toDateString()) {
+                    dayElement.className = 'today';
+                }
+            }
+            calendar.appendChild(dayElement);
+        });
+    }
 
     window.addEventListener('load', () => {
         initCalendar();
