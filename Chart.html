@@ -26,6 +26,7 @@
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             position: relative; 
+            overflow-x: auto; /* Enable horizontal scrolling */
         }
         h1 {
             text-align: center;
@@ -83,8 +84,12 @@
         const labels = Object.keys(monthlyData);
         const incomeData = labels.map(label => monthlyData[label].income);
         const expenseData = labels.map(label => monthlyData[label].expense);
+        const totalData = incomeData.map((income, index) => income + expenseData[index]);
+        
+        const incomePercent = incomeData.map((income, index) => totalData[index] > 0 ? (income / totalData[index]) * 100 : 0);
+        const expensePercent = expenseData.map((expense, index) => totalData[index] > 0 ? (expense / totalData[index]) * 100 : 0);
 
-        return { labels, incomeData, expenseData };
+        return { labels, incomeData, expenseData, incomePercent, expensePercent };
     }
 
     function plotChart() {
@@ -97,14 +102,30 @@
                 labels: data.labels,
                 datasets: [
                     {
-                        label: 'รายรับ',
+                        label: 'รายรับ (บาท)',
                         data: data.incomeData,
                         backgroundColor: '#4CAF50',
                     },
                     {
-                        label: 'รายจ่าย',
+                        label: 'รายจ่าย (บาท)',
                         data: data.expenseData,
                         backgroundColor: 'red',
+                    },
+                    {
+                        label: 'อัตราการฝาก (%)',
+                        data: data.incomePercent,
+                        type: 'line', // Add a line chart for percentages
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                        fill: true,
+                    },
+                    {
+                        label: 'อัตราการถอน (%)',
+                        data: data.expensePercent,
+                        type: 'line', // Add a line chart for percentages
+                        borderColor: 'red',
+                        backgroundColor: 'rgba(255, 0, 0, 0.2)',
+                        fill: true,
                     }
                 ]
             },
@@ -136,7 +157,11 @@
                                 if (label) {
                                     label += ': ';
                                 }
-                                label += context.raw.toLocaleString('th-TH') + ' บาท'; // Format to Thai currency
+                                if (context.dataset.type === 'line') {
+                                    label += context.raw.toFixed(2) + ' %'; // Format to percentage
+                                } else {
+                                    label += context.raw.toLocaleString('th-TH') + ' บาท'; // Format to Thai currency
+                                }
                                 return label;
                             }
                         }
