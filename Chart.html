@@ -34,14 +34,24 @@
         }
         .back-btn {
             position: absolute;
-            top: 20px;
             left: 20px;
-            display: inline-block;
+            top: 20px;
+            text-decoration: none; 
         }
-
+        .back-circle {
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            background-color: #fff; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #4CAF50; 
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
+        }
         .back-img {
-            width: 40px; /* Adjust the width as needed */
-            height: auto;
+            width: 20px; 
+            height: 20px; 
         }
         .selectors {
             display: flex;
@@ -72,8 +82,6 @@
 </div>
 
 <script>
-    const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-    
     function populateSelectors() {
         const yearSelector = document.getElementById('yearSelector');
         const monthSelector = document.getElementById('monthSelector');
@@ -89,7 +97,7 @@
         for (let month = 1; month <= 12; month++) {
             const option = document.createElement('option');
             option.value = month; // Month is 1-indexed
-            option.textContent = monthNames[month - 1];
+            option.textContent = month; // Display month as a number
             monthSelector.appendChild(option);
         }
         
