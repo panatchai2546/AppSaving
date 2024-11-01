@@ -53,15 +53,6 @@
             width: 20px; 
             height: 20px; 
         }
-        .dropdown {
-            margin: 10px 0;
-            text-align: center;
-        }
-        select {
-            padding: 10px;
-            font-size: 16px;
-            margin: 0 10px;
-        }
     </style>
 </head>
 <body>
@@ -71,92 +62,56 @@
         <img src="back_home.png" alt="ย้อนกลับ" class="back-img">
     </a>
     <h1>กราฟอัตราการเงินเข้า-ออก รายเดือน</h1>
-    
-    <div class="dropdown">
-        <select id="yearSelect"></select>
-        <select id="monthSelect"></select>
-    </div>
-
     <canvas id="incomeExpenseChart"></canvas>
 </div>
 
 <script>
-    // Populate year and month dropdowns
-    function populateDropdowns() {
-        const yearSelect = document.getElementById('yearSelect');
-        const monthSelect = document.getElementById('monthSelect');
-
-        const currentYear = new Date().getFullYear();
-        // Add year options
-        for (let year = currentYear - 5; year <= currentYear; year++) {
-            const option = document.createElement('option');
-            option.value = year;
-            option.textContent = year;
-            yearSelect.appendChild(option);
-        }
-
-        // Add month options
-        const months = [
-            "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", 
-            "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", 
-            "พฤศจิกายน", "ธันวาคม"
-        ];
-        months.forEach((month, index) => {
-            const option = document.createElement('option');
-            option.value = index + 1; // Month is 1-indexed
-            option.textContent = month;
-            monthSelect.appendChild(option);
-        });
-
-        // Set default to the current month
-        const currentMonth = new Date().getMonth() + 1; // Months are 0-indexed
-        monthSelect.value = currentMonth;
-        yearSelect.value = currentYear;
-
-        // Plot chart for default selections
-        plotChart();
-    }
-
-    function getMonthlyData(year, month) {
+    function getMonthlyData() {
         const transactions = JSON.parse(localStorage.getItem('transactions')) || [];
-        let income = 0;
-        let expense = 0;
+        const monthlyData = {};
 
         transactions.forEach(transaction => {
             const dateParts = transaction.date.split('/');
-            const transMonth = parseInt(dateParts[1]); // Month in 'MM' format
-            const transYear = parseInt(dateParts[2]); // Year in 'YYYY' format
-            
-            if (transYear === year && transMonth === month) {
-                if (transaction.type === 'การฝาก') {
-                    income += transaction.amount;
-                } else if (transaction.type === 'การถอน') {
-                    expense += transaction.amount;
-                }
+            const month = dateParts[1];
+            const year = dateParts[2];
+            const key = `${year}-${month}`;
+
+            if (!monthlyData[key]) {
+                monthlyData[key] = { income: 0, expense: 0 };
+            }
+            if (transaction.type === 'การฝาก') {
+                monthlyData[key].income += transaction.amount;
+            } else if (transaction.type === 'การถอน') {
+                monthlyData[key].expense += transaction.amount;
             }
         });
 
-        return { income, expense };
+        const labels = Object.keys(monthlyData);
+        const incomeData = labels.map(label => monthlyData[label].income);
+        const expenseData = labels.map(label => monthlyData[label].expense);
+
+        return { labels, incomeData, expenseData };
     }
 
     function plotChart() {
         const ctx = document.getElementById('incomeExpenseChart').getContext('2d');
-        const year = parseInt(document.getElementById('yearSelect').value);
-        const month = parseInt(document.getElementById('monthSelect').value);
-        const data = getMonthlyData(year, month);
+        const data = getMonthlyData();
 
-        // Clear the existing chart if it exists
-        if (window.incomeExpenseChart) {
-            window.incomeExpenseChart.destroy();
-        }
+        // Calculate totals for percentage display
+        const totalIncome = data.incomeData.reduce((a, b) => a + b, 0);
+        const totalExpense = data.expenseData.reduce((a, b) => a + b, 0);
+        
+        const totalAmount = totalIncome + totalExpense;
+        const incomePercentage = totalAmount ? ((totalIncome / totalAmount) * 100).toFixed(2) : 0;
+        const expensePercentage = totalAmount ? ((totalExpense / totalAmount) * 100).toFixed(2) : 0;
 
-        window.incomeExpenseChart = new Chart(ctx, {
+        new Chart(ctx, {
             type: 'pie',
             data: {
                 labels: ['รายรับ', 'รายจ่าย'],
                 datasets: [{
                     label: 'จำนวนเงิน',
-                    data: [data.income, data.expense],
+                    data: [totalIncome, totalExpense],
                     backgroundColor: ['#4CAF50', 'red'],
                     borderColor: ['#fff', '#fff'],
                     borderWidth: 2
@@ -175,7 +130,8 @@
                                 if (label) {
                                     label += ': ';
                                 }
-                                label += context.raw.toLocaleString('th-TH') + ' บาท';
+                                label += context.raw.toLocaleString('th-TH') + ' บาท (' + 
+                                         (context.raw === totalIncome ? incomePercentage : expensePercentage) + '%)';
                                 return label;
                             }
                         }
@@ -185,11 +141,7 @@
         });
     }
 
-    // Update chart when dropdown changes
-    document.getElementById('yearSelect').addEventListener('change', plotChart);
-    document.getElementById('monthSelect').addEventListener('change', plotChart);
-
-    document.addEventListener('DOMContentLoaded', populateDropdowns);
+    document.addEventListener('DOMContentLoaded', plotChart);
 </script>
 
 </body>
