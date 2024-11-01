@@ -53,6 +53,16 @@
             width: 20px; 
             height: 20px; 
         }
+        .selectors {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        select {
+            margin: 0 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -62,48 +72,73 @@
         <img src="back_home.png" alt="ย้อนกลับ" class="back-img">
     </a>
     <h1>กราฟอัตราการเงินเข้า-ออก รายเดือน</h1>
+    
+    <div class="selectors">
+        <select id="yearSelector"></select>
+        <select id="monthSelector"></select>
+        <button id="updateChart">ดูกราฟ</button>
+    </div>
+    
     <canvas id="incomeExpenseChart"></canvas>
 </div>
 
 <script>
-    function getMonthlyData() {
+    const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+    
+    // Populate year and month selectors
+    function populateSelectors() {
+        const yearSelector = document.getElementById('yearSelector');
+        const monthSelector = document.getElementById('monthSelector');
+        const currentYear = new Date().getFullYear();
+        
+        for (let year = currentYear - 10; year <= currentYear; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            yearSelector.appendChild(option);
+        }
+
+        for (let month = 0; month < 12; month++) {
+            const option = document.createElement('option');
+            option.value = month + 1; // Month is 1-indexed
+            option.textContent = monthNames[month];
+            monthSelector.appendChild(option);
+        }
+        
+        yearSelector.value = currentYear;
+        monthSelector.value = new Date().getMonth() + 1; // Current month is 1-indexed
+    }
+
+    function getMonthlyData(year, month) {
         const transactions = JSON.parse(localStorage.getItem('transactions')) || [];
-        const monthlyData = {};
+        let totalIncome = 0;
+        let totalExpense = 0;
 
         transactions.forEach(transaction => {
             const dateParts = transaction.date.split('/');
-            const month = dateParts[1];
-            const year = dateParts[2];
-            const key = `${year}-${month}`;
+            const transactionYear = dateParts[2];
+            const transactionMonth = dateParts[1];
 
-            if (!monthlyData[key]) {
-                monthlyData[key] = { income: 0, expense: 0 };
-            }
-            if (transaction.type === 'การฝาก') {
-                monthlyData[key].income += transaction.amount;
-            } else if (transaction.type === 'การถอน') {
-                monthlyData[key].expense += transaction.amount;
+            if (transactionYear === year && transactionMonth === month) {
+                if (transaction.type === 'การฝาก') {
+                    totalIncome += transaction.amount;
+                } else if (transaction.type === 'การถอน') {
+                    totalExpense += transaction.amount;
+                }
             }
         });
 
-        const labels = Object.keys(monthlyData);
-        const incomeData = labels.map(label => monthlyData[label].income);
-        const expenseData = labels.map(label => monthlyData[label].expense);
-
-        return { labels, incomeData, expenseData };
+        return { totalIncome, totalExpense };
     }
 
-    function plotChart() {
+    function plotChart(year, month) {
         const ctx = document.getElementById('incomeExpenseChart').getContext('2d');
-        const data = getMonthlyData();
+        const data = getMonthlyData(year, month);
 
         // Calculate totals for percentage display
-        const totalIncome = data.incomeData.reduce((a, b) => a + b, 0);
-        const totalExpense = data.expenseData.reduce((a, b) => a + b, 0);
-        
-        const totalAmount = totalIncome + totalExpense;
-        const incomePercentage = totalAmount ? ((totalIncome / totalAmount) * 100).toFixed(2) : 0;
-        const expensePercentage = totalAmount ? ((totalExpense / totalAmount) * 100).toFixed(2) : 0;
+        const totalAmount = data.totalIncome + data.totalExpense;
+        const incomePercentage = totalAmount ? ((data.totalIncome / totalAmount) * 100).toFixed(2) : 0;
+        const expensePercentage = totalAmount ? ((data.totalExpense / totalAmount) * 100).toFixed(2) : 0;
 
         new Chart(ctx, {
             type: 'pie',
@@ -111,7 +146,7 @@
                 labels: ['รายรับ', 'รายจ่าย'],
                 datasets: [{
                     label: 'จำนวนเงิน',
-                    data: [totalIncome, totalExpense],
+                    data: [data.totalIncome, data.totalExpense],
                     backgroundColor: ['#4CAF50', 'red'],
                     borderColor: ['#fff', '#fff'],
                     borderWidth: 2
@@ -131,7 +166,7 @@
                                     label += ': ';
                                 }
                                 label += context.raw.toLocaleString('th-TH') + ' บาท (' + 
-                                         (context.raw === totalIncome ? incomePercentage : expensePercentage) + '%)';
+                                         (context.raw === data.totalIncome ? incomePercentage : expensePercentage) + '%)';
                                 return label;
                             }
                         }
@@ -141,7 +176,18 @@
         });
     }
 
-    document.addEventListener('DOMContentLoaded', plotChart);
+    document.getElementById('updateChart').addEventListener('click', () => {
+        const selectedYear = document.getElementById('yearSelector').value;
+        const selectedMonth = document.getElementById('monthSelector').value;
+        plotChart(selectedYear, selectedMonth);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        populateSelectors();
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth() + 1; // Current month is 1-indexed
+        plotChart(currentYear, currentMonth);
+    });
 </script>
 
 </body>
