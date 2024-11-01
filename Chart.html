@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<!DOCTYPE html>  
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>กราฟอัตราการฝาก-การออก รายเดือน</title>
+    <title>กราฟอัตราการเงินเข้า-ออก รายเดือน</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -90,27 +90,20 @@
         const monthSelector = document.getElementById('monthSelector');
         const currentYear = new Date().getFullYear();
         
-        // Get unique years from transactions
-        const transactions = JSON.parse(localStorage.getItem('transactions')) || [];
-        const uniqueYears = new Set(transactions.map(transaction => transaction.date.split('/')[2]));
-        
-        uniqueYears.forEach(year => {
+        for (let year = currentYear - 10; year <= currentYear; year++) {
             const option = document.createElement('option');
             option.value = year;
             option.textContent = year;
             yearSelector.appendChild(option);
-        });
+        }
 
-        // Populate months based on transactions
-        const monthsInData = new Set(transactions.map(transaction => transaction.date.split('/')[1]));
-        monthsInData.forEach(month => {
+        for (let month = 1; month <= 12; month++) { // Changed to start from 1
             const option = document.createElement('option');
-            option.value = month;
-            option.textContent = monthNames[month - 1]; // Month is 1-indexed
+            option.value = month; // Month is 1-indexed
+            option.textContent = monthNames[month - 1]; // Adjusted for zero-indexing in array
             monthSelector.appendChild(option);
-        });
-
-        // Set defaults
+        }
+        
         yearSelector.value = currentYear;
         monthSelector.value = new Date().getMonth() + 1; // Current month is 1-indexed
     }
@@ -123,7 +116,7 @@
         transactions.forEach(transaction => {
             const dateParts = transaction.date.split('/');
             const transactionYear = dateParts[2];
-            const transactionMonth = dateParts[1];
+            const transactionMonth = parseInt(dateParts[1], 10); // Convert to integer for comparison
 
             if (transactionYear === year && transactionMonth === month) {
                 if (transaction.type === 'การฝาก') {
@@ -140,6 +133,11 @@
     function plotChart(year, month) {
         const ctx = document.getElementById('incomeExpenseChart').getContext('2d');
         const data = getMonthlyData(year, month);
+
+        // Calculate totals for percentage display
+        const totalAmount = data.totalIncome + data.totalExpense;
+        const incomePercentage = totalAmount ? ((data.totalIncome / totalAmount) * 100).toFixed(2) : 0;
+        const expensePercentage = totalAmount ? ((data.totalExpense / totalAmount) * 100).toFixed(2) : 0;
 
         // Clear existing chart before plotting a new one
         if (window.incomeExpenseChart) {
@@ -171,7 +169,8 @@
                                 if (label) {
                                     label += ': ';
                                 }
-                                label += context.raw.toLocaleString('th-TH') + ' บาท';
+                                label += context.raw.toLocaleString('th-TH') + ' บาท (' + 
+                                         (context.raw === data.totalIncome ? incomePercentage : expensePercentage) + '%)';
                                 return label;
                             }
                         }
