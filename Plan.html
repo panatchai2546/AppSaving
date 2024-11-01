@@ -292,43 +292,44 @@
         const selectedMonth = document.getElementById('month').value;
         const selectedYear = document.getElementById('year').value;
 
-        if (!entryDescription || isNaN(entryAmount) || entryAmount <= 0) {
-            alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+        if (isNaN(entryAmount) || entryAmount <= 0 || entryDescription.trim() === "") {
+            alert("กรุณากรอกข้อมูลให้ครบถ้วน");
             return;
         }
 
         const entry = {
-            id: Date.now(), // Generate a unique ID for each entry
             description: entryDescription,
             amount: entryAmount,
             type: entryType,
             month: selectedMonth,
-            year: selectedYear
+            year: selectedYear,
+            id: Date.now()
         };
 
-        const entries = JSON.parse(localStorage.getItem(ENTRY_STORAGE_KEY)) || [];
+        let entries = JSON.parse(localStorage.getItem(ENTRY_STORAGE_KEY)) || [];
         entries.push(entry);
         localStorage.setItem(ENTRY_STORAGE_KEY, JSON.stringify(entries));
-
-        document.getElementById('entryDescription').value = '';
-        document.getElementById('entryAmount').value = '';
+        
+        document.getElementById('entryDescription').value = "";
+        document.getElementById('entryAmount').value = "";
 
         renderTable();
-        calculateBalance();
     }
 
     function deleteEntry(id) {
         let entries = JSON.parse(localStorage.getItem(ENTRY_STORAGE_KEY)) || [];
         entries = entries.filter(entry => entry.id !== id);
         localStorage.setItem(ENTRY_STORAGE_KEY, JSON.stringify(entries));
-
         renderTable();
-        calculateBalance();
     }
 
     function renderTable() {
-        const table = document.getElementById('expensesTable');
-        table.innerHTML = `
+        const selectedMonth = document.getElementById('month').value;
+        const selectedYear = document.getElementById('year').value;
+        const expensesTable = document.getElementById('expensesTable');
+        const totalBalanceElement = document.getElementById('totalBalance');
+
+        expensesTable.innerHTML = `
             <tr>
                 <th>รายการ</th>
                 <th>รายรับ</th>
@@ -337,9 +338,7 @@
             </tr>
         `;
 
-        const selectedMonth = document.getElementById('month').value;
-        const selectedYear = document.getElementById('year').value;
-
+        let totalBalance = 0;
         const entries = JSON.parse(localStorage.getItem(ENTRY_STORAGE_KEY)) || [];
 
         entries.forEach(entry => {
@@ -347,132 +346,93 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${entry.description}</td>
-                    <td>${entry.type === 'income' ? entry.amount.toFixed(2) : ''}</td>
-                    <td>${entry.type === 'expense' ? entry.amount.toFixed(2) : ''}</td>
+                    <td>${entry.type === 'income' ? entry.amount : ''}</td>
+                    <td>${entry.type === 'expense' ? entry.amount : ''}</td>
                     <td><button onclick="deleteEntry(${entry.id})">ลบ</button></td>
                 `;
-                table.appendChild(row);
+
+                totalBalance += (entry.type === 'income' ? entry.amount : -entry.amount);
+                expensesTable.appendChild(row);
             }
         });
+
+        totalBalanceElement.textContent = totalBalance;
     }
 
-    function calculateBalance() {
-        const entries = JSON.parse(localStorage.getItem(ENTRY_STORAGE_KEY)) || [];
-        const selectedMonth = document.getElementById('month').value;
-        const selectedYear = document.getElementById('year').value;
-
-        const totalBalance = entries.reduce((balance, entry) => {
-            if (entry.month === selectedMonth && entry.year === selectedYear) {
-                return entry.type === 'income' ? balance + entry.amount : balance - entry.amount;
-            }
-            return balance;
-        }, 0);
-
-        document.getElementById('totalBalance').textContent = totalBalance.toFixed(2);
-    }
-
-    function renderCalendar(month, year) {
-        const calendar = document.getElementById('calendar');
-        calendar.innerHTML = '';
-
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-
-        const monthDays = [];
-
-        for (let i = 0; i < firstDay.getDay(); i++) {
-            monthDays.push(null);
-        }
-
-        for (let i = 1; i <= lastDay.getDate(); i++) {
-            monthDays.push(new Date(year, month, i));
-        }
-
-        const daysOfWeek = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
-
-        daysOfWeek.forEach(day => {
-            const dayHeader = document.createElement('div');
-            dayHeader.className = 'day-header';
-            dayHeader.textContent = day;
-            calendar.appendChild(dayHeader);
-        });
-
-        const holidays = getHolidays(month, year);
-
-        monthDays.forEach(day => {
-            const dayElement = document.createElement('div');
-            if (day) {
-                dayElement.textContent = day.getDate();
-                if (day.toDateString() === today.toDateString()) {
-                    dayElement.className = 'today';
-                }
-
-                if (holidays.includes(day.getDate())) {
-                    dayElement.className += ' holiday';
-                }
-            }
-            calendar.appendChild(dayElement);
-        });
-    }
-
-    function getHolidays(month, year) {
-        const holidays = {
-            0: [1], // มกราคม: วันขึ้นปีใหม่
-            3: [6, 13], // เมษายน: วันจักรี และ วันสงกรานต์
-            4: [1], // พฤษภาคม: วันแรงงาน
-            11: [31], // ธันวาคม: วันสิ้นปี
-        };
-
-        return holidays[month] || [];
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const now = new Date();
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
-
+    function populateMonthAndYearSelectors() {
         const monthSelect = document.getElementById('month');
         const yearSelect = document.getElementById('year');
-
-        for (let i = 0; i < 12; i++) {
+        
+        const months = [
+            'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+            'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+        ];
+        
+        months.forEach((month, index) => {
             const option = document.createElement('option');
-            option.value = i;
-            option.text = new Date(0, i).toLocaleString('th-TH', { month: 'long' });
+            option.value = index + 1;
+            option.text = month;
             monthSelect.appendChild(option);
-        }
+        });
 
-        for (let i = currentYear - 10; i <= currentYear + 10; i++) {
+        const currentYear = new Date().getFullYear();
+        for (let i = currentYear - 5; i <= currentYear + 5; i++) {
             const option = document.createElement('option');
             option.value = i;
             option.text = i;
             yearSelect.appendChild(option);
         }
 
-        monthSelect.value = currentMonth;
-        yearSelect.value = currentYear;
+        monthSelect.value = new Date().getMonth() + 1;
+        yearSelect.value = new Date().getFullYear();
+    }
 
-        renderCalendar(currentMonth, currentYear);
+    document.getElementById('month').addEventListener('change', renderTable);
+    document.getElementById('year').addEventListener('change', renderTable);
+
+    function renderCalendar() {
+        const calendarElement = document.getElementById('calendar');
+        calendarElement.innerHTML = '';
+        
+        const daysHeader = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+        daysHeader.forEach(day => {
+            const dayHeader = document.createElement('div');
+            dayHeader.classList.add('day-header');
+            dayHeader.textContent = day;
+            calendarElement.appendChild(dayHeader);
+        });
+
+        const today = new Date();
+        const selectedMonth = document.getElementById('month').value - 1;
+        const selectedYear = document.getElementById('year').value;
+        const firstDayOfMonth = new Date(selectedYear, selectedMonth, 1).getDay();
+        const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+
+        for (let i = 0; i < firstDayOfMonth; i++) {
+            const emptyCell = document.createElement('div');
+            calendarElement.appendChild(emptyCell);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateElement = document.createElement('div');
+            dateElement.textContent = day;
+
+            if (day === today.getDate() && selectedMonth === today.getMonth() && selectedYear == today.getFullYear()) {
+                dateElement.classList.add('today');
+            }
+
+            calendarElement.appendChild(dateElement);
+        }
+    }
+
+    document.getElementById('month').addEventListener('change', renderCalendar);
+    document.getElementById('year').addEventListener('change', renderCalendar);
+
+    window.onload = function () {
+        populateMonthAndYearSelectors();
         renderTable();
-        calculateBalance();
-
-        monthSelect.addEventListener('change', () => {
-            const selectedMonth = parseInt(monthSelect.value);
-            const selectedYear = parseInt(yearSelect.value);
-            renderCalendar(selectedMonth, selectedYear);
-            renderTable();
-            calculateBalance();
-        });
-
-        yearSelect.addEventListener('change', () => {
-            const selectedMonth = parseInt(monthSelect.value);
-            const selectedYear = parseInt(yearSelect.value);
-            renderCalendar(selectedMonth, selectedYear);
-            renderTable();
-            calculateBalance();
-        });
-    });
+        renderCalendar();
+    };
 </script>
 
 </body>
