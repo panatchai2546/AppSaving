@@ -1,9 +1,9 @@
-<!DOCTYPE html>  
+<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>กราฟอัตราการฝาก-การถอน รายเดือน</title>
+    <title>กราฟแสดงอัตราการฝาก-ถอน รายเดือน</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -34,13 +34,24 @@
         }
         .back-btn {
             position: absolute;
-            top: 20px;
             left: 20px;
-            display: inline-block;
+            top: 20px;
+            text-decoration: none; 
+        }
+        .back-circle {
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            background-color: #fff; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #4CAF50; 
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
         }
         .back-img {
-            width: 40px; /* Adjust the width as needed */
-            height: auto;
+            width: 20px; 
+            height: 20px; 
         }
         .selectors {
             display: flex;
@@ -73,7 +84,6 @@
 <script>
     const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
     
-    // Populate year and month selectors
     function populateSelectors() {
         const yearSelector = document.getElementById('yearSelector');
         const monthSelector = document.getElementById('monthSelector');
@@ -86,10 +96,10 @@
             yearSelector.appendChild(option);
         }
 
-        for (let month = 1; month <= 12; month++) { // Changed to start from 1
+        for (let month = 1; month <= 12; month++) {
             const option = document.createElement('option');
             option.value = month; // Month is 1-indexed
-            option.textContent = monthNames[month - 1]; // Adjusted for zero-indexing in array
+            option.textContent = monthNames[month - 1];
             monthSelector.appendChild(option);
         }
         
@@ -105,9 +115,9 @@
         transactions.forEach(transaction => {
             const dateParts = transaction.date.split('/');
             const transactionYear = dateParts[2];
-            const transactionMonth = parseInt(dateParts[1], 10); // Convert to integer for comparison
+            const transactionMonth = parseInt(dateParts[1], 10); // Parse month as an integer
 
-            if (transactionYear === year && transactionMonth === month) {
+            if (transactionYear == year && transactionMonth == month) {
                 if (transaction.type === 'การฝาก') {
                     totalIncome += transaction.amount;
                 } else if (transaction.type === 'การถอน') {
@@ -123,11 +133,6 @@
         const ctx = document.getElementById('incomeExpenseChart').getContext('2d');
         const data = getMonthlyData(year, month);
 
-        // Calculate totals for percentage display
-        const totalAmount = data.totalIncome + data.totalExpense;
-        const incomePercentage = totalAmount ? ((data.totalIncome / totalAmount) * 100).toFixed(2) : 0;
-        const expensePercentage = totalAmount ? ((data.totalExpense / totalAmount) * 100).toFixed(2) : 0;
-
         // Clear existing chart before plotting a new one
         if (window.incomeExpenseChart) {
             window.incomeExpenseChart.destroy();
@@ -138,7 +143,6 @@
             data: {
                 labels: ['รายรับ', 'รายจ่าย'],
                 datasets: [{
-                    label: 'จำนวนเงิน',
                     data: [data.totalIncome, data.totalExpense],
                     backgroundColor: ['#4CAF50', 'red'],
                     borderColor: ['#fff', '#fff'],
@@ -158,8 +162,7 @@
                                 if (label) {
                                     label += ': ';
                                 }
-                                label += context.raw.toLocaleString('th-TH') + ' บาท (' + 
-                                         (context.raw === data.totalIncome ? incomePercentage : expensePercentage) + '%)';
+                                label += context.raw.toLocaleString('th-TH') + ' บาท';
                                 return label;
                             }
                         }
