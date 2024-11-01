@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -76,7 +76,6 @@
     <div class="selectors">
         <select id="yearSelector"></select>
         <select id="monthSelector"></select>
-        <button id="updateChart">ดูกราฟ</button>
     </div>
     
     <canvas id="incomeExpenseChart"></canvas>
@@ -140,7 +139,12 @@
         const incomePercentage = totalAmount ? ((data.totalIncome / totalAmount) * 100).toFixed(2) : 0;
         const expensePercentage = totalAmount ? ((data.totalExpense / totalAmount) * 100).toFixed(2) : 0;
 
-        new Chart(ctx, {
+        // Clear existing chart before plotting a new one
+        if (window.incomeExpenseChart) {
+            window.incomeExpenseChart.destroy();
+        }
+
+        window.incomeExpenseChart = new Chart(ctx, {
             type: 'pie',
             data: {
                 labels: ['รายรับ', 'รายจ่าย'],
@@ -176,7 +180,13 @@
         });
     }
 
-    document.getElementById('updateChart').addEventListener('click', () => {
+    document.getElementById('yearSelector').addEventListener('change', () => {
+        const selectedYear = document.getElementById('yearSelector').value;
+        const selectedMonth = document.getElementById('monthSelector').value;
+        plotChart(selectedYear, selectedMonth);
+    });
+
+    document.getElementById('monthSelector').addEventListener('change', () => {
         const selectedYear = document.getElementById('yearSelector').value;
         const selectedMonth = document.getElementById('monthSelector').value;
         plotChart(selectedYear, selectedMonth);
