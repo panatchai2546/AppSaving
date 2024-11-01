@@ -3,381 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>บันทึกการเก็บเงิน</title>
+    <title>กราฟอัตราการเงินเข้า-ออก รายเดือน</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
         }
         .container {
-            max-width: 600px;
-            margin: 0 auto;
+            width: 90%;
+            max-width: 800px;
             padding: 20px;
-            border: 1px solid #ccc;
+            background-color: #fff;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative; 
         }
         h1 {
             text-align: center;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        table, th, td {
-            border: 1px solid #ccc;
-        }
-        th, td {
-            padding: 9px;
-            text-align: center;
-        }
-        .scrollable-table {
-            max-height: 200px; /* Adjust the height as needed */
-            overflow-y: auto;
-            display: block;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        input[type="text"], input[type="number"], select {
-            width: calc(100% - 22px);
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box; /* Ensure padding and border are included in width */
-        }
-        .transaction-btn {
-            width: calc(100% - 22px);
-            padding: 10px;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-bottom: 10px;
-        }
-        .deposit-btn {
-            background-color: #28a745;
-        }
-        .withdraw-btn {
-            background-color: #dc3545;
-        }
-        .transaction-btn:hover {
-            opacity: 0.8;
-        }
-        .money-img {
-            display: block;
-            margin: 0 auto;
-            max-width: 100%;
-            height: auto;
-        }
-        .error-message {
-            color: red;
-            text-align: center;
-        }
-        .delete-btn {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-        .delete-btn:hover {
-            opacity: 0.8;
-        }
-        .container {
-            position: relative;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .header {
-            text-align: center;
+            color: #4CAF50;
             margin-bottom: 20px;
-            width: 100%;
         }
-        .header h1 {
-            margin: 0;
+        .back-btn {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            text-decoration: none; 
         }
-        .header img {
-            max-width: 100%;
-            height: auto;
+        .back-circle {
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            background-color: #fff; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #4CAF50; 
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
+        }
+        .back-img {
+            width: 20px; 
+            height: 20px; 
+        }
+        .selectors {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        select {
+            margin: 0 10px;
+            padding: 10px;
+            font-size: 16px;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="header">
-        <a href="https://panatchai2546.github.io/AppSaving/Home.html" class="back-btn">
-            <img src="back_home.png" alt="ย้อนกลับ" class="back-img">
-        </a>
+
+<div class="container">
+    <a href="https://panatchai2546.github.io/AppSaving/Saving.html" class="back-btn">
+        <img src="back_home.png" alt="ย้อนกลับ" class="back-img">
+    </a>
+    <h1>กราฟอัตราการเงินเข้า-ออก รายเดือน</h1>
+    
+    <div class="selectors">
+        <select id="yearSelector"></select>
+        <select id="monthSelector"></select>
     </div>
-    <h1>บันทึกการเก็บเงิน</h1>
-    <img src="Money.jpg" alt="Money" class="money-img">
-    <p></p>
-    <form id="savingsForm">
-        <input type="text" id="description" placeholder="คำอธิบาย" required>
-        <input type="number" id="amount" placeholder="จำนวนเงิน" required>
-        <select id="transactionType">
-            <option value="deposit">การฝาก</option>
-            <option value="withdraw">การถอน</option>
-        </select>
-        <input type="submit" value="เพิ่มรายการ" id="transactionBtn" class="transaction-btn deposit-btn">
-    </form>
-    <div id="errorMessage" class="error-message"></div>
-    <h2>รายการทั้งหมด</h2>
-    <div class="scrollable-table">
-        <table>
-            <thead>
-                <tr>
-                    <th>วันที่</th>
-                    <th>คำอธิบาย</th>
-                    <th>จำนวนเงิน</th>
-                    <th>รายการ</th>
-                    <th>ลบ</th>
-                </tr>
-            </thead>
-            <tbody id="transactionList">
-                <!-- List will be populated here -->
-            </tbody>
-        </table>
-    </div>
-    <h2>ยอดรวม: <span id="totalAmount">0</span> บาท</h2>
-    <h2>ตารางหมวดหมู่</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>คำอธิบาย</th>
-                <th>จำนวนเงินรวม</th>
-            </tr>
-        </thead>
-        <tbody id="categoryList">
-            <!-- Categories will be populated here -->
-        </tbody>
-    </table>
+    
+    <canvas id="incomeExpenseChart"></canvas>
+</div>
 
-    <canvas id="transactionChart" width="400" height="200"></canvas>
-
-    <a href="https://panatchai2546.github.io/AppSaving/Chart.html" style="display: block; text-align: center; margin-top: 20px; color: #4CAF50;">ดูกราฟอัตราการเงินเข้า-ออก</a>
-
-    <script>
-        document.getElementById('transactionType').addEventListener('change', function() {
-            const transactionType = this.value;
-            const transactionBtn = document.getElementById('transactionBtn');
-
-            if (transactionType === 'deposit') {
-                transactionBtn.classList.add('deposit-btn');
-                transactionBtn.classList.remove('withdraw-btn');
-                transactionBtn.value = 'เพิ่มรายการ';
-            } else {
-                transactionBtn.classList.add('withdraw-btn');
-                transactionBtn.classList.remove('deposit-btn');
-                transactionBtn.value = 'เพิ่มรายการ';
-            }
+<script>
+    const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+    
+    // Populate year and month selectors
+    function populateSelectors() {
+        const yearSelector = document.getElementById('yearSelector');
+        const monthSelector = document.getElementById('monthSelector');
+        const currentYear = new Date().getFullYear();
+        
+        // Get unique years from transactions
+        const transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        const uniqueYears = new Set(transactions.map(transaction => transaction.date.split('/')[2]));
+        
+        uniqueYears.forEach(year => {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            yearSelector.appendChild(option);
         });
 
-        document.getElementById('savingsForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const transactionType = document.getElementById('transactionType').value;
-            if (transactionType === 'deposit') {
-                addDeposit();
-            } else {
-                addWithdraw();
-            }
-            renderChart(); // Update chart after adding a transaction
+        // Populate months based on transactions
+        const monthsInData = new Set(transactions.map(transaction => transaction.date.split('/')[1]));
+        monthsInData.forEach(month => {
+            const option = document.createElement('option');
+            option.value = month;
+            option.textContent = monthNames[month - 1]; // Month is 1-indexed
+            monthSelector.appendChild(option);
         });
 
-        function addDeposit() {
-            const description = document.getElementById('description').value;
-            const amount = parseFloat(document.getElementById('amount').value);
-            const date = new Date().toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok' });
-            if (!description || isNaN(amount) || amount <= 0) return;
+        // Set defaults
+        yearSelector.value = currentYear;
+        monthSelector.value = new Date().getMonth() + 1; // Current month is 1-indexed
+    }
 
-            const transactions = getTransactions();
-            transactions.push({ date, description, amount, type: 'การฝาก' });
-            saveTransactions(transactions);
+    function getMonthlyData(year, month) {
+        const transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        let totalIncome = 0;
+        let totalExpense = 0;
 
-            updateCategory(description, amount);
-            renderTransactions();
-            renderCategories();
-        }
+        transactions.forEach(transaction => {
+            const dateParts = transaction.date.split('/');
+            const transactionYear = dateParts[2];
+            const transactionMonth = dateParts[1];
 
-        function addWithdraw() {
-            const description = document.getElementById('description').value;
-            const amount = parseFloat(document.getElementById('amount').value);
-            const date = new Date().toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok' });
-            if (!description || isNaN(amount) || amount <= 0) return;
-
-            const total = getTotalAmount();
-            const categories = getCategories();
-            const existingCategory = categories.find(cat => cat.description === description);
-
-            if (!existingCategory) {
-                document.getElementById('errorMessage').textContent = 'ไม่พบคำอธิบายที่ตรงกันในหมวดหมู่';
-                return;
-            }
-
-            if (amount > total || existingCategory.amount < amount) {
-                document.getElementById('errorMessage').textContent = 'ยอดเงินไม่เพียงพอสำหรับการถอน';
-                return;
-            } else {
-                document.getElementById('errorMessage').textContent = '';
-            }
-
-            const transactions = getTransactions();
-            transactions.push({ date, description, amount, type: 'การถอน' });
-            saveTransactions(transactions);
-
-            updateCategory(description, -amount);
-            renderTransactions();
-            renderCategories();
-        }
-
-        function deleteTransaction(index) {
-            const transactions = getTransactions();
-            const transactionToDelete = transactions[index];
-
-            // Update categories and total amount
-            updateCategory(transactionToDelete.description, transactionToDelete.type === 'การฝาก' ? -transactionToDelete.amount : transactionToDelete.amount);
-
-            transactions.splice(index, 1);
-            saveTransactions(transactions);
-            renderTransactions();
-            renderCategories();
-            renderChart(); // Update chart after deleting a transaction
-        }
-
-        function getTransactions() {
-            const transactionsJSON = localStorage.getItem('transactions');
-            return transactionsJSON ? JSON.parse(transactionsJSON) : [];
-        }
-
-        function saveTransactions(transactions) {
-            localStorage.setItem('transactions', JSON.stringify(transactions));
-        }
-
-        function renderTransactions() {
-            const transactions = getTransactions();
-            const transactionList = document.getElementById('transactionList');
-            transactionList.innerHTML = '';
-
-            transactions.forEach((transaction, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${transaction.date}</td>
-                    <td>${transaction.description}</td>
-                    <td>${transaction.amount}</td>
-                    <td>${transaction.type}</td>
-                    <td><button class="delete-btn" onclick="deleteTransaction(${index})">ลบ</button></td>
-                `;
-                transactionList.appendChild(row);
-            });
-
-            const total = transactions.reduce((sum, transaction) => {
-                return transaction.type === 'การฝาก' ? sum + transaction.amount : sum - transaction.amount;
-            }, 0);
-
-            document.getElementById('totalAmount').textContent = total.toFixed(2);
-        }
-
-        function getTotalAmount() {
-            const transactions = getTransactions();
-            return transactions.reduce((sum, transaction) => {
-                return transaction.type === 'การฝาก' ? sum + transaction.amount : sum - transaction.amount;
-            }, 0);
-        }
-
-        function updateCategory(description, amount) {
-            const categories = getCategories();
-            const existingCategory = categories.find(cat => cat.description === description);
-
-            if (existingCategory) {
-                existingCategory.amount += amount;
-            } else {
-                categories.push({ description, amount });
-            }
-
-            saveCategories(categories);
-            renderCategories();
-        }
-
-        function getCategories() {
-            const categoriesJSON = localStorage.getItem('categories');
-            return categoriesJSON ? JSON.parse(categoriesJSON) : [];
-        }
-
-        function saveCategories(categories) {
-            localStorage.setItem('categories', JSON.stringify(categories));
-        }
-
-        function renderCategories() {
-            const categories = getCategories();
-            const categoryList = document.getElementById('categoryList');
-            categoryList.innerHTML = '';
-
-            categories.forEach(category => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${category.description}</td>
-                    <td>${category.amount.toFixed(2)}</td>
-                `;
-                categoryList.appendChild(row);
-            });
-        }
-
-        function renderChart() {
-            const transactions = getTransactions();
-            const labels = [];
-            const data = [];
-
-            transactions.forEach(transaction => {
-                const existingLabelIndex = labels.indexOf(transaction.description);
-                if (existingLabelIndex === -1) {
-                    labels.push(transaction.description);
-                    data.push(transaction.type === 'การฝาก' ? transaction.amount : -transaction.amount);
-                } else {
-                    data[existingLabelIndex] += (transaction.type === 'การฝาก' ? transaction.amount : -transaction.amount);
+            if (transactionYear === year && transactionMonth === month) {
+                if (transaction.type === 'การฝาก') {
+                    totalIncome += transaction.amount;
+                } else if (transaction.type === 'การถอน') {
+                    totalExpense += transaction.amount;
                 }
-            });
+            }
+        });
 
-            const ctx = document.getElementById('transactionChart').getContext('2d');
-            const chartData = {
-                labels: labels,
+        return { totalIncome, totalExpense };
+    }
+
+    function plotChart(year, month) {
+        const ctx = document.getElementById('incomeExpenseChart').getContext('2d');
+        const data = getMonthlyData(year, month);
+
+        // Clear existing chart before plotting a new one
+        if (window.incomeExpenseChart) {
+            window.incomeExpenseChart.destroy();
+        }
+
+        window.incomeExpenseChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['รายรับ', 'รายจ่าย'],
                 datasets: [{
-                    label: 'เงินเข้า-ออก',
-                    data: data,
-                    backgroundColor: ['#28a745', '#dc3545'],
-                    borderColor: '#000',
-                    borderWidth: 1
+                    label: 'จำนวนเงิน',
+                    data: [data.totalIncome, data.totalExpense],
+                    backgroundColor: ['#4CAF50', 'red'],
+                    borderColor: ['#fff', '#fff'],
+                    borderWidth: 2
                 }]
-            };
-
-            new Chart(ctx, {
-                type: 'bar',
-                data: chartData,
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += context.raw.toLocaleString('th-TH') + ' บาท';
+                                return label;
+                            }
                         }
                     }
                 }
-            });
-        }
+            }
+        });
+    }
 
-        // Initial render
-        renderTransactions();
-        renderCategories();
-        renderChart(); // Initial chart render
-    </script>
+    document.getElementById('yearSelector').addEventListener('change', () => {
+        const selectedYear = document.getElementById('yearSelector').value;
+        const selectedMonth = document.getElementById('monthSelector').value;
+        plotChart(selectedYear, selectedMonth);
+    });
+
+    document.getElementById('monthSelector').addEventListener('change', () => {
+        const selectedYear = document.getElementById('yearSelector').value;
+        const selectedMonth = document.getElementById('monthSelector').value;
+        plotChart(selectedYear, selectedMonth);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        populateSelectors();
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth() + 1; // Current month is 1-indexed
+        plotChart(currentYear, currentMonth);
+    });
+</script>
+
 </body>
 </html>
