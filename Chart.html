@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>กราฟแสดงอัตราการฝาก-ถอน</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script> <!-- Include the datalabels plugin -->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -27,7 +26,6 @@
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             position: relative; 
-            overflow-x: auto; /* Enable horizontal scrolling */
         }
         h1 {
             text-align: center;
@@ -85,12 +83,8 @@
         const labels = Object.keys(monthlyData);
         const incomeData = labels.map(label => monthlyData[label].income);
         const expenseData = labels.map(label => monthlyData[label].expense);
-        const totalData = incomeData.map((income, index) => income + expenseData[index]);
-        
-        const incomePercent = incomeData.map((income, index) => totalData[index] > 0 ? (income / totalData[index]) * 100 : 0);
-        const expensePercent = expenseData.map((expense, index) => totalData[index] > 0 ? (expense / totalData[index]) * 100 : 0);
 
-        return { labels, incomeData, expenseData, incomePercent, expensePercent };
+        return { labels, incomeData, expenseData };
     }
 
     function plotChart() {
@@ -111,32 +105,6 @@
                         label: 'รายจ่าย (บาท)',
                         data: data.expenseData,
                         backgroundColor: 'red',
-                    },
-                    {
-                        label: 'อัตราการฝาก (%)',
-                        data: data.incomePercent,
-                        type: 'line', // Add a line chart for percentages
-                        borderColor: '#4CAF50',
-                        backgroundColor: 'rgba(76, 175, 80, 0.2)',
-                        fill: true,
-                        datalabels: {
-                            align: 'end',
-                            anchor: 'end',
-                            formatter: (value) => value.toFixed(2) + ' %' // Show percentage on line chart
-                        }
-                    },
-                    {
-                        label: 'อัตราการถอน (%)',
-                        data: data.expensePercent,
-                        type: 'line', // Add a line chart for percentages
-                        borderColor: 'red',
-                        backgroundColor: 'rgba(255, 0, 0, 0.2)',
-                        fill: true,
-                        datalabels: {
-                            align: 'end',
-                            anchor: 'end',
-                            formatter: (value) => value.toFixed(2) + ' %' // Show percentage on line chart
-                        }
                     }
                 ]
             },
@@ -168,19 +136,17 @@
                                 if (label) {
                                     label += ': ';
                                 }
-                                if (context.dataset.type === 'line') {
-                                    label += context.raw.toFixed(2) + ' %'; // Format to percentage
-                                } else {
-                                    label += context.raw.toLocaleString('th-TH') + ' บาท'; // Format to Thai currency
-                                }
+                                // Show monetary value
+                                label += context.raw.toLocaleString('th-TH') + ' บาท'; // Format to Thai currency
+
+                                // Calculate percentage
+                                const total = data.incomeData[context.dataIndex] + data.expenseData[context.dataIndex];
+                                const percent = total > 0 ? (context.raw / total) * 100 : 0;
+                                label += ` (${percent.toFixed(2)}%)`; // Show the percentage
+
                                 return label;
                             }
                         }
-                    },
-                    datalabels: {
-                        display: true,
-                        color: '#000',
-                        formatter: (value) => value.toFixed(2) + ' %', // Format percentage for datalabels
                     }
                 }
             }
@@ -191,4 +157,4 @@
 </script>
 
 </body>
-</html>ก
+</html>
