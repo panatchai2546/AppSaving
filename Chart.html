@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>กราฟแสดงอัตราการฝาก-ถอน รายเดือน</title>
+    <title>กราฟอัตราการเงินเข้า-ออก รายเดือน</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -34,111 +34,108 @@
         }
         .back-btn {
             position: absolute;
-            top: 20px;
             left: 20px;
-            display: inline-block;
+            top: 20px;
+            text-decoration: none; 
         }
-
-        .back-img {
-            width: 40px; /* Adjust the width as needed */
-            height: auto;
-        }
-        .selectors {
+        .back-circle {
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            background-color: #fff; 
             display: flex;
             justify-content: center;
-            margin-bottom: 20px;
+            align-items: center;
+            border: 2px solid #4CAF50; 
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
         }
-        select {
-            margin: 0 10px;
-            padding: 10px;
-            font-size: 16px;
+        .back-img {
+            width: 20px; 
+            height: 20px; 
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <a href="https://panatchai2546.github.io/AppSaving/Saving.html" class="back-btn">
-        <img src="back_home.png" alt="ย้อนกลับ" class="back-img">
+    <a href="Saving.html" class="back-btn">
+        <div class="back-circle">
+            <img src="back_home.png" alt="ย้อนกลับ" class="back-img">
+        </div>
     </a>
-    <h1>กราฟแสดงอัตราการฝาก-ถอน รายเดือน</h1>
-    
-    <div class="selectors">
-        <select id="yearSelector"></select>
-        <select id="monthSelector"></select>
-    </div>
-    
+    <h1>กราฟอัตราการเงินเข้า-ออก รายเดือน</h1>
     <canvas id="incomeExpenseChart"></canvas>
 </div>
 
 <script>
-    function populateSelectors() {
-        const yearSelector = document.getElementById('yearSelector');
-        const monthSelector = document.getElementById('monthSelector');
-        const currentYear = new Date().getFullYear();
-        
-        for (let year = currentYear - 10; year <= currentYear; year++) {
-            const option = document.createElement('option');
-            option.value = year;
-            option.textContent = year;
-            yearSelector.appendChild(option);
-        }
-
-        for (let month = 1; month <= 12; month++) {
-            const option = document.createElement('option');
-            option.value = month; // Month is 1-indexed
-            option.textContent = month; // Display month as a number
-            monthSelector.appendChild(option);
-        }
-        
-        yearSelector.value = currentYear;
-        monthSelector.value = new Date().getMonth() + 1; // Current month is 1-indexed
-    }
-
-    function getMonthlyData(year, month) {
+    function getMonthlyData() {
+        // Retrieve transactions from local storage
         const transactions = JSON.parse(localStorage.getItem('transactions')) || [];
-        let totalIncome = 0;
-        let totalExpense = 0;
+        const monthlyData = {};
 
         transactions.forEach(transaction => {
             const dateParts = transaction.date.split('/');
-            const transactionYear = dateParts[2];
-            const transactionMonth = parseInt(dateParts[1], 10); // Parse month as an integer
+            const month = dateParts[1]; // Month in 'MM' format
+            const year = dateParts[2]; // Year in 'YYYY' format
+            const key = `${year}-${month}`; // Create a unique key for each month
 
-            if (transactionYear == year && transactionMonth == month) {
-                if (transaction.type === 'การฝาก') {
-                    totalIncome += transaction.amount;
-                } else if (transaction.type === 'การถอน') {
-                    totalExpense += transaction.amount;
-                }
+            if (!monthlyData[key]) {
+                monthlyData[key] = { income: 0, expense: 0 };
+            }
+            // Check the transaction type and accumulate amounts
+            if (transaction.type === 'การฝาก') {
+                monthlyData[key].income += transaction.amount;
+            } else if (transaction.type === 'การถอน') {
+                monthlyData[key].expense += transaction.amount;
             }
         });
 
-        return { totalIncome, totalExpense };
+        // Prepare data for charting
+        const labels = Object.keys(monthlyData);
+        const incomeData = labels.map(label => monthlyData[label].income);
+        const expenseData = labels.map(label => monthlyData[label].expense);
+
+        return { labels, incomeData, expenseData };
     }
 
-    function plotChart(year, month) {
+    function plotChart() {
         const ctx = document.getElementById('incomeExpenseChart').getContext('2d');
-        const data = getMonthlyData(year, month);
+        const data = getMonthlyData();
 
-        // Clear existing chart before plotting a new one
-        if (window.incomeExpenseChart) {
-            window.incomeExpenseChart.destroy();
-        }
-
-        window.incomeExpenseChart = new Chart(ctx, {
-            type: 'pie',
+        new Chart(ctx, {
+            type: 'bar', // Change to 'bar' for monthly plotting
             data: {
-                labels: ['รายรับ', 'รายจ่าย'],
-                datasets: [{
-                    data: [data.totalIncome, data.totalExpense],
-                    backgroundColor: ['#4CAF50', 'red'],
-                    borderColor: ['#fff', '#fff'],
-                    borderWidth: 2
-                }]
+                labels: data.labels,
+                datasets: [
+                    {
+                        label: 'รายรับ',
+                        data: data.incomeData,
+                        backgroundColor: '#4CAF50',
+                    },
+                    {
+                        label: 'รายจ่าย',
+                        data: data.expenseData,
+                        backgroundColor: 'red',
+                    }
+                ]
             },
             options: {
                 responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'จำนวนเงิน (บาท)' // Label for Y-axis
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'เดือน (ปี-เดือน)' // Label for X-axis
+                        }
+                    }
+                },
                 plugins: {
                     legend: {
                         position: 'top',
@@ -146,11 +143,11 @@
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                let label = context.label || '';
+                                let label = context.dataset.label || '';
                                 if (label) {
                                     label += ': ';
                                 }
-                                label += context.raw.toLocaleString('th-TH') + ' บาท';
+                                label += context.raw.toLocaleString('th-TH') + ' บาท'; // Format to Thai currency
                                 return label;
                             }
                         }
@@ -160,24 +157,7 @@
         });
     }
 
-    document.getElementById('yearSelector').addEventListener('change', () => {
-        const selectedYear = document.getElementById('yearSelector').value;
-        const selectedMonth = document.getElementById('monthSelector').value;
-        plotChart(selectedYear, selectedMonth);
-    });
-
-    document.getElementById('monthSelector').addEventListener('change', () => {
-        const selectedYear = document.getElementById('yearSelector').value;
-        const selectedMonth = document.getElementById('monthSelector').value;
-        plotChart(selectedYear, selectedMonth);
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-        populateSelectors();
-        const currentYear = new Date().getFullYear();
-        const currentMonth = new Date().getMonth() + 1; // Current month is 1-indexed
-        plotChart(currentYear, currentMonth);
-    });
+    document.addEventListener('DOMContentLoaded', plotChart);
 </script>
 
 </body>
